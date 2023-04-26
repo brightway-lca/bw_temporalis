@@ -1,6 +1,7 @@
-from bw2speedups import consolidate
-import numpy as np
 from numbers import Number
+
+import numpy as np
+from bw2speedups import consolidate
 
 
 class TemporalDistribution:
@@ -103,9 +104,13 @@ class TemporalDistribution:
                 if not len(self) == len(other):
                     raise ValueError("Incompatible dimensions")
                 elif self.base_time_type == "timedelta64[D]":
-                    return TemporalDistribution(other.times + self.times, self.values + other.values)
+                    return TemporalDistribution(
+                        other.times + self.times, self.values + other.values
+                    )
                 else:
-                    return TemporalDistribution(self.times + other.times, self.values + other.values)
+                    return TemporalDistribution(
+                        self.times + other.times, self.values + other.values
+                    )
         elif isinstance(other, Number):
             return TemporalDistribution(self.times, self.values + float(other))
         else:

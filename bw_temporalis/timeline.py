@@ -22,6 +22,7 @@ class FlowTD:
     --------
     bw_temporalis.temporal_distribution.TemporalDistribution: A container for a series of values spread over time.
     """
+
     distribution: TemporalDistribution
     flow: int
     activity: int
@@ -43,14 +44,11 @@ class Timeline:
         self.data = data or []
 
     def add_flow_temporal_distribution(
-        self,
-        td: TemporalDistribution,
-        flow: int,
-        activity: int
+        self, td: TemporalDistribution, flow: int, activity: int
     ) -> None:
         """
         Append a TemporalDistribution object to the Timeline.data object.
-    
+
         Parameters
         ----------
         td : TemporalDistribution
@@ -59,17 +57,13 @@ class Timeline:
             Associated flow.
         activity : int
             Associated activity.
-        
+
         See Also
         --------
         bw_temporalis.temporal_distribution.TemporalDistribution: A container for a series of values spread over time.
         """
         self.data.append(
-            FlowTD(
-                distribution=td.nonzero(),
-                flow=flow,
-                activity=activity
-            )
+            FlowTD(distribution=td.nonzero(), flow=flow, activity=activity)
         )
 
     def build_dataframe(self) -> None:
@@ -86,15 +80,21 @@ class Timeline:
         """
         times: np.ndarray = np.hstack([o.distribution.times for o in self.data])
         values: np.ndarray = np.hstack([o.distribution.values for o in self.data])
-        flows: np.ndarray = np.hstack([o.flow * np.ones(len(o.distribution)) for o in self.data])
-        activities: np.ndarray = np.hstack([o.activity * np.ones(len(o.distribution)) for o in self.data])
+        flows: np.ndarray = np.hstack(
+            [o.flow * np.ones(len(o.distribution)) for o in self.data]
+        )
+        activities: np.ndarray = np.hstack(
+            [o.activity * np.ones(len(o.distribution)) for o in self.data]
+        )
 
-        self.df = pd.DataFrame({
-            'times': pd.Series(data = times, dtype='datetime64[D]'),
-            'values': pd.Series(data = values, dtype='float64'),
-            'flows': pd.Series(data = flows, dtype='int'),
-            'activities': pd.Series(data = activities, dtype='int'),
-        })
+        self.df = pd.DataFrame(
+            {
+                "times": pd.Series(data=times, dtype="datetime64[D]"),
+                "values": pd.Series(data=values, dtype="float64"),
+                "flows": pd.Series(data=flows, dtype="int"),
+                "activities": pd.Series(data=activities, dtype="int"),
+            }
+        )
 
     def characterize_dataframe(
         self,
@@ -103,8 +103,10 @@ class Timeline:
         activity: int,
         flow: int,
     ) -> None:
-        _filtered_df = self.df.loc[(self.df['activities'] == activity) & (self.df['flows'] == flow)]
-        _filtered_df.sort_values(by = 'times', ascending=True, inplace=True)
+        _filtered_df = self.df.loc[
+            (self.df["activities"] == activity) & (self.df["flows"] == flow)
+        ]
+        _filtered_df.sort_values(by="times", ascending=True, inplace=True)
         _filtered_df.reset_index(drop=True, inplace=True)
 
         collection_times_new = []
@@ -113,11 +115,14 @@ class Timeline:
         collection_flows_new = []
 
         for i in _filtered_df.index:
-            i_time = _filtered_df.loc[i, 'times']
-            i_value = _filtered_df.loc[i, 'values']
+            i_time = _filtered_df.loc[i, "times"]
+            i_value = _filtered_df.loc[i, "values"]
 
-            times_new = [i+1 for i in range(i_time, period)]
-            values_new = [characterization_function(value = i_value, time = i+1) for i in range(i_time, period)]
+            times_new = [i + 1 for i in range(i_time, period)]
+            values_new = [
+                characterization_function(value=i_value, time=i + 1)
+                for i in range(i_time, period)
+            ]
             activities_new = [activity for i in range(i_time, period)]
             flows_new = [flow for i in range(i_time, period)]
 
@@ -126,12 +131,14 @@ class Timeline:
             collection_activities_new.extend(activities_new)
             collection_flows_new.extend(flows_new)
 
-        self.df = pd.DataFrame({
-            'times': pd.Series(data = collection_times_new, dtype='datetime64[D]'),
-            'values': pd.Series(data = collection_values_new, dtype='float64'),
-            'flows': pd.Series(data = collection_flows_new, dtype='int'),
-            'activities': pd.Series(data = collection_activities_new, dtype='int'),
-        })
+        self.df = pd.DataFrame(
+            {
+                "times": pd.Series(data=collection_times_new, dtype="datetime64[D]"),
+                "values": pd.Series(data=collection_values_new, dtype="float64"),
+                "flows": pd.Series(data=collection_flows_new, dtype="int"),
+                "activities": pd.Series(data=collection_activities_new, dtype="int"),
+            }
+        )
 
     def convert_dataframe_to_years(self):
         raise NotImplementedError

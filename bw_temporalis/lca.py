@@ -1,14 +1,17 @@
-from .temporal_distribution import TemporalDistribution as TD
-from .timeline import Timeline
-from bw2calc import LCA
-from bw2data.backends import ActivityDataset as AD, ExchangeDataset as ED
-from bw_graph_tools import GraphTraversal
 from collections import defaultdict
 from collections.abc import Iterable
 from datetime import datetime
-from heapq import heappush, heappop
+from heapq import heappop, heappush
+
 import bw2data as bd
 import numpy as np
+from bw2calc import LCA
+from bw2data.backends import ActivityDataset as AD
+from bw2data.backends import ExchangeDataset as ED
+from bw_graph_tools import GraphTraversal
+
+from .temporal_distribution import TemporalDistribution as TD
+from .timeline import Timeline
 
 
 class MultipleTechnosphereExchanges(Exception):

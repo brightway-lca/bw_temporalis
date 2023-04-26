@@ -1,9 +1,4 @@
-__all__ = (
-    "__version__",
-    "Timeline",
-    "TemporalDistribution",
-    "TemporalisLCA"
-)
+__all__ = ("__version__", "Timeline", "TemporalDistribution", "TemporalisLCA")
 
 from .lca import TemporalisLCA
 from .temporal_distribution import TemporalDistribution
