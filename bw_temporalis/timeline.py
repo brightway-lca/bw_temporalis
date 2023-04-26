@@ -105,14 +105,38 @@ class Timeline:
         cumsum: bool | None = True
     ) -> None:
         """
-        self.df = pd.DataFrame(
-            {
-                "times": pd.Series(data=collection_times_new, dtype="datetime64[s]"),
-                "values": pd.Series(data=collection_values_new, dtype="float64"),
-                "flows": pd.Series(data=collection_flows_new, dtype="int"),
-                "activities": pd.Series(data=collection_activities_new, dtype="int"),
-            }
-        )
+        Applies a characterization function to a Timeline Pandas DataFrame.
+
+        An input Timeline of the form
+
+        | times | values | flows | activities |
+        |-------|--------|-------|------------|
+        | 101   | 33     | 1     | 2          |
+        | 312   | 21     | 4     | 2          |
+
+        is transformed into
+
+        | times | values | flows | activities |
+        |-------|--------|-------|------------|
+        | 101   | 33     | 1     | 2          |
+        | 102   | 32     | 1     | 2          |
+        | 103   | 31     | 1     | 2          |
+        | 312   | 21     | 4     | 2          |
+        | 313   | 20     | 4     | 2          |
+        | 314   | 19     | 4     | 2          |
+
+        Each row of the input Timeline corresponds to a single day (`times`) and the associated value (`values`).
+        The `characterization_function` is applied to each row of the input Timeline for a given `period` of days.
+        The new rows are appended to the Timeline Pandas DataFrame.
+
+        Parameters
+        ----------
+        characterization_function : Callable
+            Charcterization function to apply to the values Timeline Pandas DataFrame.
+        period : int
+            Period in days.
+        activity : int
+        flow : int
         """
         df = self.df.copy()
         if activities:
@@ -127,5 +151,40 @@ class Timeline:
             result_df["values_sum"] = result_df["values"].cumsum()
         return result_df
 
-    def convert_dataframe_to_years(self):
-        raise NotImplementedError
+    def sum_days_to_years(self) -> None:
+        """
+        Sums the day-resolution `values` of the Timeline Pandas DataFrame to years.
+
+        An input Timeline of the form
+
+        | times | values | flows | activities |
+        |-------|--------|-------|------------|
+        | 101   | 33     | 1     | 2          |
+        | 102   | 32     | 1     | 2          |
+        | 103   | 31     | 1     | 2          |
+        | 412   | 21     | 4     | 2          |
+        | 413   | 20     | 4     | 2          |
+        | 514   | 19     | 4     | 2          |
+
+        is transformed into
+
+        | year | values | flows | activities |
+        |-------|--------|-------|------------|
+        | 1     | 96     | 1     | 2          |
+        | 2     | 60     | 4     | 2          |
+
+        Returns
+        -------
+        None, modifies the Timeline Pandas DataFrame `df` in place.
+        """
+
+        _df_grouped = df.groupby([df['times'].dt.year]).agg(
+            {
+                'values': 'sum',
+                'flows': 'first',
+                'activities': 'first'
+            }
+        ).reset_index()
+
+        _df_grouped.rename(columns={'times': 'year'})
+        self.df = _df_grouped
