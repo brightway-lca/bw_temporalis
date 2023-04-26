@@ -180,12 +180,30 @@ class Timeline:
         """
         Sums the day-resolution `values` of the Timeline Pandas DataFrame to years.
 
+        An input Timeline of the form
+
+        | times | values | flows | activities |
+        |-------|--------|-------|------------|
+        | 101   | 33     | 1     | 2          |
+        | 102   | 32     | 1     | 2          |
+        | 103   | 31     | 1     | 2          |
+        | 412   | 21     | 4     | 2          |
+        | 413   | 20     | 4     | 2          |
+        | 514   | 19     | 4     | 2          |
+
+        is transformed into
+
+        | year | values | flows | activities |
+        |-------|--------|-------|------------|
+        | 1     | 96     | 1     | 2          |
+        | 2     | 60     | 4     | 2          |
+
         Returns
         -------
         None, modifies the Timeline Pandas DataFrame `df` in place.
         """
         
-        self.df = df.groupby([df['times'].dt.year]).agg(
+        _df_grouped = df.groupby([df['times'].dt.year]).agg(
             {
                 'values': 'sum',
                 'flows': 'first',
@@ -193,6 +211,5 @@ class Timeline:
             }
         ).reset_index()
 
-
-    def 
-    
+        _df_grouped.rename(columns={'times': 'year'})
+        self.df = _df_grouped
