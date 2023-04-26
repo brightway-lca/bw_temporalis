@@ -149,7 +149,8 @@ class Timeline:
         -------
         None, modifies the Timeline Pandas DataFrame `df` in place.
         """
-        df_grouped = df.groupby([df['times'].dt.year]).agg(
+        
+        _df_grouped = df.groupby([df['times'].dt.year]).agg(
             {
                 'values': 'sum',
                 'flows': 'first',
@@ -157,6 +158,7 @@ class Timeline:
             }
         ).reset_index()
 
-        return df_grouped
+        self.df = _df_grouped
+
 
     
