@@ -41,21 +41,18 @@ class TemporalisLCA:
         starting_datetime: datetime | str = "now",
         graph_traversal_config: dict | None = None,
         cutoff: float | None = 5e-3,
-        biosphere_cutoff: float | None = 1e-4,
+        biosphere_cutoff: float | None = 1e-5,
         max_calc: int | None = 1e5,
         static_activity_indices: set[int] | None = set(),
+        skip_coproducts: bool | None = False,
+        functional_unit_unique_id: int | None = -1,
     ):
         self.lca_object = lca_object
+        self.unique_id = functional_unit_unique_id
         self.t0 = TD(
             np.array([np.datetime64(starting_datetime)]).astype("datetime64[D]"),
             np.array([1]),
         )
-        graph_traversal_config = graph_traversal_config or {}
-        graph_traversal_config["separate_biosphere_flows"] = True
-        self.functional_unit_unique_id = graph_traversal_config.get(
-            "functional_unit_unique_id", -1
-        )
-
         for db in bd.databases:
             if bd.databases[db].get("static"):
                 static_activity_indices.add(
@@ -72,7 +69,9 @@ class TemporalisLCA:
             max_calc=max_calc,
             cutoff=cutoff,
             biosphere_cutoff=biosphere_cutoff,
-            **(graph_traversal_config or {}),
+            separate_biosphere_flows=True,
+            skip_coproducts=skip_coproducts,
+            functional_unit_unique_id=functional_unit_unique_id,
         )
         print("Calculation count:", gt["calculation_count"])
         self.nodes = gt["nodes"]
@@ -91,7 +90,7 @@ class TemporalisLCA:
         heap = []
         timeline = Timeline()
 
-        for edge in self.edge_mapping[self.functional_unit_unique_id]:
+        for edge in self.edge_mapping[self.unique_id]:
             node = self.nodes[edge.producer_id]
             heappush(
                 heap,
