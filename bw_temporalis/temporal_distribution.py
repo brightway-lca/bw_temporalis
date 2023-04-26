@@ -70,8 +70,6 @@ class TemporalDistribution:
             t, v = consolidate(times.view("int64"), values)
             return TemporalDistribution(t.astype(self.base_time_type), v)
         else:
-            if self.base_time_type == "datetime64[D]":
-                raise ValueError("Can't multiply a datetime array")
             try:
                 return TemporalDistribution(self.times, self.values * float(other))
             except:

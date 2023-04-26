@@ -72,13 +72,23 @@ def test_div_int(simple):
     )
 
 
-def test_mul_int(simple):
+def test_mul_number_td(simple):
     simple *= 5
     assert np.array_equal(
         simple.times,
         np.arange(0, 5, dtype="timedelta64[D]"),
     )
     assert np.allclose(simple.values, np.ones(5) * 10)
+
+
+def test_mul_number_dt():
+    a = TD(np.arange(0, 5, dtype="datetime64[D]"), np.ones(5))
+    a *= 5
+    assert np.array_equal(
+        simple.times,
+        np.arange(0, 5, dtype="datetime64[D]"),
+    )
+    assert np.allclose(simple.values, np.ones(5) * 5)
 
 
 def test_add_error_two_datetime(simple):
