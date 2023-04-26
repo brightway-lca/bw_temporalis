@@ -78,23 +78,24 @@ class Timeline:
         - flows: int
         - activities: int
         """
-        times: np.ndarray = np.hstack([o.distribution.times for o in self.data])
-        values: np.ndarray = np.hstack([o.distribution.values for o in self.data])
-        flows: np.ndarray = np.hstack(
+        times = np.hstack([o.distribution.times for o in self.data])
+        values = np.hstack([o.distribution.values for o in self.data])
+        flows = np.hstack(
             [o.flow * np.ones(len(o.distribution)) for o in self.data]
         )
-        activities: np.ndarray = np.hstack(
+        activities = np.hstack(
             [o.activity * np.ones(len(o.distribution)) for o in self.data]
         )
 
         self.df = pd.DataFrame(
             {
-                "times": pd.Series(data=times, dtype="datetime64[D]"),
+                "times": pd.Series(data=times.astype("datetime64[s]"), dtype="datetime64[s]"),
                 "values": pd.Series(data=values, dtype="float64"),
                 "flows": pd.Series(data=flows, dtype="int"),
                 "activities": pd.Series(data=activities, dtype="int"),
             }
         )
+        self.df.sort_values(by="times", ascending=True, inplace=True)
 
     def characterize_dataframe(
         self,
@@ -133,7 +134,7 @@ class Timeline:
 
         self.df = pd.DataFrame(
             {
-                "times": pd.Series(data=collection_times_new, dtype="datetime64[D]"),
+                "times": pd.Series(data=collection_times_new, dtype="datetime64[s]"),
                 "values": pd.Series(data=collection_values_new, dtype="float64"),
                 "flows": pd.Series(data=collection_flows_new, dtype="int"),
                 "activities": pd.Series(data=collection_activities_new, dtype="int"),
