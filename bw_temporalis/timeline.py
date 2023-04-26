@@ -7,11 +7,25 @@ import numpy as np
 from dataclasses import dataclass
 from datetime import datetime
 import pandas as pd
+import importlib
 
 
 @dataclass
 class FlowTD:
-    distribtion: TemporalDistribution
+    """
+    Class for storing a temporal distribution associated with a flow and activity.
+
+    Attributes
+    ----------
+    distribution : TemporalDistribution
+    flow : int
+    activity : int
+
+    See Also
+    --------
+    bw_temporalis.temporal_distribution.TemporalDistribution: A container for a series of values spread over time.
+    """
+    distribution: TemporalDistribution
     flow: int
     activity: int
 
@@ -20,44 +34,122 @@ class FlowTD:
 
 
 class Timeline:
-    """Sum and group elements over time.
-    Timeline calculations produce a list of [(datetime, amount)] tuples."""
+    """
+    Sum and group elements over time.
+    Timeline calculations produce a list of [(datetime, amount)] tuples.
+
+    Attributes
+    ----------
+    self.data : list[FlowTD]
+    self.characterized : TODO
+    self.finalized : bool
+    """
 
     def __init__(self, data: list[FlowTD] | None = None):
         self.data = data or []
         self.characterized = []
         self.finalized = False
 
-    def sort(self):
-        """Sort the raw timeline data. Characterized data is already sorted."""
-        self.raw.sort(key=lambda x: x.dt)
+    def add_flow_temporal_distribution(
+        self,
+        td: TemporalDistribution,
+        flow: int,
+        activity: int
+    ) -> None:
+        """
+        Append a TemporalDistribution object to the Timeline.data object.
+    
+        Parameters
+        ----------
+        td : TemporalDistribution
+            Temporal distribution to add.
+        flow : int
+            Associated flow.
+        activity : int
+            Associated activity.
+        
+        See Also
+        --------
+        bw_temporalis.temporal_distribution.TemporalDistribution: A container for a series of values spread over time.
+        """
+        self.data.append(
+            FlowTD(
+                distribution=td.nonzero(),
+                flow=flow,
+                activity=activity
+            )
+        )
 
-    def add_flow_temporal_distribution(self, td: TemporalDistribution, flow: int, activity: int):
-        self.data.append(FlowTD(distribution=td.nonzero(), flow=flow, activity=activity))
 
-    def build_dataframe(self):
-        times = np.hstack([o.distribution.times for o in self.data])
-        data = np.hstack([o.distribution.data for o in self.data])
-        flows = np.hstack([o.flow * np.ones(len(o.distribution)) for o in self.data])
-        activities = np.hstack([o.activity * np.ones(len(o.distribution)) for o in self.data])
+    def build_dataframe(self) -> None:
+        """
+        Build a Pandas DataFrame from the Timeline.data object and store it as a Timeline.pd object.
+
+        Returns
+        -------
+        None, creates class attribute Pandas DataFrame `df` with the following columns:
+        - times: datetime64[D]
+        - values: float64
+        - flows: int
+        - activities: int
+        """
+        _times: np.ndarray = np.hstack([o.distribution.times for o in self.data])
+        _values: np.ndarray = np.hstack([o.distribution.values for o in self.data])
+        _flows: np.ndarray = np.hstack([o.flow * np.ones(len(o.distribution)) for o in self.data])
+        _activities: np.ndarray = np.hstack([o.activity * np.ones(len(o.distribution)) for o in self.data])
 
         self.df = pd.DataFrame({
-            'times': times,
-            'data': data,
-            'flows': flows,
-            'activities': activities
+            'times': pd.Series(data = _times, dtype='datetime64[D]'),
+            'values': pd.Series(data = _values, dtype='float64'),
+            'flows': pd.Series(data = _flows, dtype='int'),
+            'activities': pd.Series(data = _activities, dtype='int'),
         })
 
-    def filter(self, flow: int | None = None, activity: int | None = None):
-        f = lambda x: x.flow == flow if flow is not None else True
-        g = lambda x: x.activity == activity if activity is not None else True
-        return Timeline([x for x in self.raw if f(x) and g(x)])
 
-    def total(self, flow: int | None = None, activity: int | None = None):
-        """Return cumulative amount of the flow passed for the activity passed"""
-        f = lambda x: x.flow == flow if flow is not None else True
-        g = lambda x: x.activity == activity if activity is not None else True
-        return sum([x.value for x in self.raw if f(x) and g(x)])
+    def characterize_dataframe(
+        self,
+        method: str,
+        period: int,
+        activity: int,
+        flow: int,
+    ) -> None:
+
+        characterization_module = importlib.import_module('../examples/ia.py')
+        try:
+            char_function = getattr(characterization_module, method)
+        except AttributeError:
+            print(f"The method {method} does not exist.")
+
+        _filtered_df = self.df.loc[(self.df['activities'] == activity) & (self.df['flows'] == flow)]
+        _filtered_df.sort_values(by = 'times', ascending=True, inplace=True)
+        _filtered_df.reset_index(drop=True, inplace=True)
+
+        collection_times_new = []
+        collection_values_new = []
+        collection_activities_new = []
+        collection_flows_new = []
+
+        for i in _filtered_df.index:
+            i_time = _filtered_df.loc[i, 'times']
+            i_value = _filtered_df.loc[i, 'values']
+
+            times_new = [i+1 for i in range(i_time, period)]
+            values_new = [char_function(value = i_value, time = i+1) for i in range(i_time, period)]
+            activities_new = [activity for i in range(i_time, period)]
+            flows_new = [flow for i in range(i_time, period)]
+
+            collection_times_new.extend(times_new)
+            collection_values_new.extend(values_new)
+            collection_activities_new.extend(activities_new)
+            collection_flows_new.extend(flows_new)
+
+        _new_df = pd.DataFrame({
+            'times': pd.Series(data = collection_times_new, dtype='datetime64[D]'),
+            'values': pd.Series(data = collection_values_new, dtype='float64'),
+            'flows': pd.Series(data = collection_flows_new, dtype='int'),
+            'activities': pd.Series(data = collection_activities_new, dtype='int'),
+        })
+        
 
     def characterize_static(self, method, cumulative=True, stepped=False):
         """Characterize a Timeline object with a static impact assessment method.
