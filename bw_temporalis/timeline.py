@@ -104,6 +104,41 @@ class Timeline:
         activity: int,
         flow: int,
     ) -> None:
+        """
+        Applies a characterization function to a Timeline Pandas DataFrame.
+
+        An input Timeline of the form
+
+        | times | values | flows | activities |
+        |-------|--------|-------|------------|
+        | 101   | 33     | 1     | 2          |
+        | 312   | 21     | 4     | 2          |
+
+        is transformed into
+
+        | times | values | flows | activities |
+        |-------|--------|-------|------------|
+        | 101   | 33     | 1     | 2          |
+        | 102   | 32     | 1     | 2          |
+        | 103   | 31     | 1     | 2          |
+        | 312   | 21     | 4     | 2          |
+        | 313   | 20     | 4     | 2          |
+        | 314   | 19     | 4     | 2          |
+
+        Each row of the input Timeline corresponds to a single day (`times`) and the associated value (`values`).      
+        The `characterization_function` is applied to each row of the input Timeline for a given `period` of days.
+        The new rows are appended to the Timeline Pandas DataFrame.
+
+        Parameters
+        ----------
+        characterization_function : Callable
+            Charcterization function to apply to the values Timeline Pandas DataFrame.
+        period : int
+            Period in days.
+        activity : int
+        flow : int
+        """
+
         _filtered_df = self.df.loc[
             (self.df["activities"] == activity) & (self.df["flows"] == flow)
         ]
