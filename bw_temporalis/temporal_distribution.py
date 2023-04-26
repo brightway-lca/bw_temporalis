@@ -45,7 +45,7 @@ class TemporalDistribution:
         return float(self.values.sum())
 
     def nonzero(self):
-        mask = self.values == 0
+        mask = self.values != 0
         return TemporalDistribution(self.times[mask], self.values[mask])
 
     def __getitem__(self, index):
