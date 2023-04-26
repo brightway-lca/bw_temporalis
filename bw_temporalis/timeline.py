@@ -100,38 +100,11 @@ class Timeline:
     def characterize_dataframe(
         self,
         characterization_function: Callable,
-        period: int,
-        activity: int,
-        flow: int,
+        activities: set[int] | None = None,
+        flows: set[int] | None = None,
+        cumsum: bool | None = True
     ) -> None:
-        _filtered_df = self.df.loc[
-            (self.df["activities"] == activity) & (self.df["flows"] == flow)
-        ]
-        _filtered_df.sort_values(by="times", ascending=True, inplace=True)
-        _filtered_df.reset_index(drop=True, inplace=True)
-
-        collection_times_new = []
-        collection_values_new = []
-        collection_activities_new = []
-        collection_flows_new = []
-
-        for i in _filtered_df.index:
-            i_time = _filtered_df.loc[i, "times"]
-            i_value = _filtered_df.loc[i, "values"]
-
-            times_new = [i + 1 for i in range(i_time, period)]
-            values_new = [
-                characterization_function(value=i_value, time=i + 1)
-                for i in range(i_time, period)
-            ]
-            activities_new = [activity for i in range(i_time, period)]
-            flows_new = [flow for i in range(i_time, period)]
-
-            collection_times_new.extend(times_new)
-            collection_values_new.extend(values_new)
-            collection_activities_new.extend(activities_new)
-            collection_flows_new.extend(flows_new)
-
+        """
         self.df = pd.DataFrame(
             {
                 "times": pd.Series(data=collection_times_new, dtype="datetime64[s]"),
@@ -140,6 +113,19 @@ class Timeline:
                 "activities": pd.Series(data=collection_activities_new, dtype="int"),
             }
         )
+        """
+        df = self.df.copy()
+        if activities:
+            df = df.loc[self.df["activities"].isin(activities)]
+        if flows:
+            df = df.loc[self.df["flows"].isin(flows)]
+        df.reset_index(drop=True, inplace=True)
+        result_df = pd.concat([characterization_function(row) for _, row in df.iterrows()])
+        if 'times' in result_df.columns:
+            result_df.sort_values(by="times", ascending=True, inplace=True)
+        if cumsum and "values" in result_df:
+            result_df["values_sum"] = result_df["values"].cumsum()
+        return result_df
 
     def convert_dataframe_to_years(self):
         raise NotImplementedError
