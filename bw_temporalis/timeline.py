@@ -16,6 +16,9 @@ class FlowTD:
     activity: int
 
 
+# TBD: Decorator wrapper for building dataframe
+
+
 class Timeline:
     """Sum and group elements over time.
     Timeline calculations produce a list of [(datetime, amount)] tuples."""
@@ -32,19 +35,18 @@ class Timeline:
     def add_flow_temporal_distribution(self, td: TemporalDistribution, flow: int, activity: int):
         self.data.append(FlowTD(distribution=td.nonzero(), flow=flow, activity=activity))
 
-    def finalize(self):
+    def build_dataframe(self):
+        times = np.hstack([o.distribution.times for o in self.data])
+        data = np.hstack([o.distribution.data for o in self.data])
+        flows = np.hstack([o.flow * np.ones(len(o.distribution)) for o in self.data])
+        activities = np.hstack([o.activity * np.ones(len(o.distribution)) for o in self.data])
 
-
-
-        self.df = pd.DataFrame()
-
-    def flows(self):
-        """Get set of flows in timeline"""
-        return {pt.flow for pt in self.raw}
-
-    def activities(self):
-        """Get set of activities in timeline"""
-        return {pt.activity for pt in self.raw}
+        self.df = pd.DataFrame({
+            'times': times,
+            'data': data,
+            'flows': flows,
+            'activities': activities
+        })
 
     def filter(self, flow: int | None = None, activity: int | None = None):
         f = lambda x: x.flow == flow if flow is not None else True
