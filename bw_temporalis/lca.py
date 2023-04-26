@@ -103,7 +103,6 @@ class TemporalisLCA:
 
         while heap:
             _, td, node = heappop(heap)
-
             for flow in self.flow_mapping.get(node.unique_id, []):
                 for exchange in self.get_biosphere_exchanges(
                     flow.flow_datapackage_id, node.activity_datapackage_id
@@ -160,7 +159,7 @@ class TemporalisLCA:
                     exc.data["temporal distribution"] /= total
                 yield exc
         else:
-            return exchanges[0]
+            yield from exchanges
 
     def get_technosphere_exchange(self, input_id: int, output_id: int) -> ED:
         exchanges = self._exchange_iterator(input_id, output_id)
