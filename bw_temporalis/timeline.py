@@ -7,6 +7,7 @@ import numpy as np
 from dataclasses import dataclass
 from datetime import datetime
 import pandas as pd
+import importlib
 
 
 @dataclass
@@ -113,7 +114,11 @@ class Timeline:
         flow: int,
     ) -> None:
 
-        #TODO load method here
+        characterization_module = importlib.import_module('../examples/ia.py')
+        try:
+            char_function = getattr(characterization_module, method)
+        except AttributeError:
+            print(f"The method {method} does not exist.")
 
         _filtered_df = self.df.loc[(self.df['activities'] == activity) & (self.df['flows'] == flow)]
         _filtered_df.sort_values(by = 'times', ascending=True, inplace=True)
@@ -129,7 +134,7 @@ class Timeline:
             i_value = _filtered_df.loc[i, 'values']
 
             times_new = [i+1 for i in range(i_time, period)]
-            values_new = [method_function(value = i_value, time = i+1) for i in range(i_time, period)]
+            values_new = [char_function(value = i_value, time = i+1) for i in range(i_time, period)]
             activities_new = [activity for i in range(i_time, period)]
             flows_new = [flow for i in range(i_time, period)]
 
@@ -144,7 +149,7 @@ class Timeline:
             'flows': pd.Series(data = collection_flows_new, dtype='int'),
             'activities': pd.Series(data = collection_activities_new, dtype='int'),
         })
-
+        
 
     def characterize_static(self, method, cumulative=True, stepped=False):
         """Characterize a Timeline object with a static impact assessment method.
