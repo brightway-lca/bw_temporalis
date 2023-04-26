@@ -129,10 +129,7 @@ class TemporalDistribution:
         )
 
     def __repr__(self):
-        return (
-            "TemporalDistribution instance with %s values (total: %.4g, min: %.4g, max: %.4g"
-            % (len(self.values), self.total, self.values.min(), self.values.max())
-        )
+        return str(self)
 
     def cumulative(self):
         """Return new temporal distribution with cumulative values"""
