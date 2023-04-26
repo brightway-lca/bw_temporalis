@@ -119,7 +119,7 @@ class Timeline:
             i_time = _filtered_df.loc[i, "times"]
             i_value = _filtered_df.loc[i, "values"]
 
-            times_new = [i + 1 for i in range(i_time, period)]
+            times_new = [i + 1 for i in range(i_time, period)] # this will need to change
             values_new = [
                 characterization_function(value=i_value, time=i + 1)
                 for i in range(i_time, period)
@@ -141,5 +141,22 @@ class Timeline:
             }
         )
 
-    def convert_dataframe_to_years(self):
-        raise NotImplementedError
+    def sum_days_to_years(self) -> None:
+        """
+        Sums the day-resolution `values` of the Timeline Pandas DataFrame to years.
+
+        Returns
+        -------
+        None, modifies the Timeline Pandas DataFrame `df` in place.
+        """
+        df_grouped = df.groupby([df['times'].dt.year]).agg(
+            {
+                'values': 'sum',
+                'flows': 'first',
+                'activities': 'first'
+            }
+        ).reset_index()
+
+        return df_grouped
+
+    
