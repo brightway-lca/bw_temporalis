@@ -119,13 +119,13 @@ class Timeline:
             i_time = _filtered_df.loc[i, "times"]
             i_value = _filtered_df.loc[i, "values"]
 
-            times_new = [i + 1 for i in range(i_time, period)] # this will need to change
+            times_new = [i_time + pd.Timedelta(days=j) for j in range(0, period)]
             values_new = [
-                characterization_function(value=i_value, time=i + 1)
-                for i in range(i_time, period)
+                characterization_function(value=i_value, time=i_time + pd.Timedelta(days=j))
+                for j in range(0, period)
             ]
-            activities_new = [activity for i in range(i_time, period)]
-            flows_new = [flow for i in range(i_time, period)]
+            activities_new = [activity for j in range(0, period)]
+            flows_new = [flow for j in range(0, period)]
 
             collection_times_new.extend(times_new)
             collection_values_new.extend(values_new)
@@ -150,7 +150,7 @@ class Timeline:
         None, modifies the Timeline Pandas DataFrame `df` in place.
         """
         
-        _df_grouped = df.groupby([df['times'].dt.year]).agg(
+        self.df = df.groupby([df['times'].dt.year]).agg(
             {
                 'values': 'sum',
                 'flows': 'first',
@@ -158,7 +158,6 @@ class Timeline:
             }
         ).reset_index()
 
-        self.df = _df_grouped
 
-
+    def 
     
