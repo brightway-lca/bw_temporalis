@@ -105,14 +105,14 @@ class Timeline:
         """
         Applies a characterization function to a Timeline Pandas DataFrame.
 
-        An input Timeline of the form
+        The characterization function is expected to take a row from the input Timeline of the form
 
         | date | amount | flow | activity |
         |-------|-------|------|----------|
         | 101   | 33    | 1    | 2        |
         | 312   | 21    | 4    | 2        |
 
-        is transformed into
+        and transform it for a given time period. The output for a very simple function could look like:
 
         | date | amount | flow | activity |
         |------|--------|------|----------|
