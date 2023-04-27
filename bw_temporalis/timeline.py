@@ -4,7 +4,7 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 
-from bw_temporalis.temporal_distribution import TemporalDistribution
+from .temporal_distribution import TemporalDistribution
 
 
 @dataclass
@@ -36,8 +36,6 @@ class Timeline:
     Attributes
     ----------
     self.data : list[FlowTD]
-    self.characterized : TODO
-    self.finalized : bool
     """
 
     def __init__(self, data: list[FlowTD] | None = None):
@@ -132,7 +130,7 @@ class Timeline:
         Parameters
         ----------
         characterization_function : Callable
-            Charcterization function to apply to the values Timeline Pandas DataFrame.
+            Characterization function to apply to the values Timeline Pandas DataFrame.
         period : int
             Period in days.
         activity : int
