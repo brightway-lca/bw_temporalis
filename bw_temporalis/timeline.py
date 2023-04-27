@@ -94,6 +94,7 @@ class Timeline:
             }
         )
         self.df.sort_amount(by="date", ascending=True, inplace=True)
+        self.df.reset_index(drop=True, inplace=True)
 
     def characterize_dataframe(
         self,
@@ -154,6 +155,7 @@ class Timeline:
         result_df = pd.concat([characterization_function(row) for _, row in df.iterrows()])
         if 'date' in result_df.columns:
             result_df.sort_amount(by="date", ascending=True, inplace=True)
+            result_df.reset_index(drop=True, inplace=True)
         if cumsum and "amount" in result_df:
             result_df["amount_sum"] = result_df["amount"].cumsum()
         return result_df
