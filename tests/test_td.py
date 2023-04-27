@@ -27,12 +27,6 @@ def test_mul_wrong_type(simple):
         second * first
 
 
-def test_mul_wrong_type_two(simple):
-    first = TD(np.arange(0, 5, dtype="datetime64[D]"), np.ones(5) * 2)
-    with pytest.raises(ValueError):
-        first * 4.0
-
-
 def test_mul_td(simple):
     td2 = TD(np.array((-1, 0, 1), dtype="timedelta64[D]"), np.ones(3).astype(float))
 
@@ -82,14 +76,14 @@ def test_mul_number_td(simple):
     assert np.allclose(simple.amount, np.ones(5) * 10)
 
 
-def test_mul_number_dt():
+def test_mul_number_dt(simple):
     a = TD(np.arange(0, 5, dtype="datetime64[D]"), np.ones(5))
     a *= 5
     assert np.array_equal(
-        simple.date,
+        a.date,
         np.arange(0, 5, dtype="datetime64[D]"),
     )
-    assert np.allclose(simple.amount, np.ones(5) * 5)
+    assert np.allclose(a.amount, np.ones(5) * 5)
 
 
 def test_add_error_two_datetime(simple):

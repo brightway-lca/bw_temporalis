@@ -109,6 +109,6 @@ def function_characterization_test(series: pd.Series, period: int = 2) -> pd.Dat
     )
 
 
-@pytest.skip("Not yet")
+@pytest.mark.skip("Not yet")
 def test_characterization():
-    raise ChrisShouldImplementThisError
+    pass
