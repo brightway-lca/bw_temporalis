@@ -26,7 +26,7 @@ def eol():
                 {
                     'amount': 5,
                     'input': ('temporalis-example', 'EOL'),
-                    'temporal distribution': TD(
+                    'temporal_distribution': TD(
                         np.array([0, 1, 2, 3, 4], dtype='timedelta64[Y]') ,
                         np.array([1.0, 1.0, 1.0, 1.0, 1.0])
                     ),
@@ -60,7 +60,7 @@ def eol():
                 {
                     'amount': 1,
                     'input': ('temporalis-example', 'Production'),
-                    'temporal distribution': TD(
+                    'temporal_distribution': TD(
                         np.array([4], dtype='timedelta64[M]'),
                         np.array([1.0])
                     ),
@@ -74,7 +74,7 @@ def eol():
                 {
                     'amount': 1,
                     'input': ('temporalis-example', 'Transport'),
-                    'temporal distribution': TD(
+                    'temporal_distribution': TD(
                         np.array([200],dtype='timedelta64[D]'),
                         np.array([1.0])
                     ),
@@ -105,7 +105,7 @@ def eol():
                 {
                     'amount': 1.2,
                     'input': ('temporalis-example', 'Forest'),
-                    'temporal distribution': TD(
+                    'temporal_distribution': TD(
                         np.array([14], dtype='timedelta64[M]'),
                         np.array([1.2])
                     ),
@@ -125,7 +125,7 @@ def eol():
                 {
                     'amount': -.2 * 6,
                     'input': ('temporalis-example', 'CO2'),
-                    'temporal distribution': TD(
+                    'temporal_distribution': TD(
                         np.array([-4, -3, 0, 1, 2, 5], dtype='timedelta64[Y]'),
                         np.array([-.2]*6)
                     ),
@@ -134,7 +134,7 @@ def eol():
                 {
                     'amount': 1.5,
                     'input': ('temporalis-example', 'Thinning'),
-                    'temporal distribution': TD(
+                    'temporal_distribution': TD(
                         np.array([-3, 0, 1], dtype='timedelta64[Y]'),
                         np.array([.5] * 3)
                     ),
@@ -164,7 +164,7 @@ def eol():
                 {
                     'amount': 0.1,
                     'input': ('temporalis-example', 'CH4'),
-                    'temporal distribution': TD(
+                    'temporal_distribution': TD(
                         np.array([10, 20, 40, 60], dtype='timedelta64[M]'),
                         np.array([0.025] * 4)
                     ),
