@@ -71,59 +71,59 @@ class Timeline:
         Returns
         -------
         None, creates class attribute Pandas DataFrame `df` with the following columns:
-        - times: datetime64[D]
-        - values: float64
-        - flows: int
-        - activities: int
+        - date: datetime64[s]
+        - amount: float64
+        - flow: int
+        - activity: int
         """
-        times = np.hstack([o.distribution.times for o in self.data])
-        values = np.hstack([o.distribution.values for o in self.data])
-        flows = np.hstack(
+        date = np.hstack([o.distribution.date for o in self.data])
+        amount = np.hstack([o.distribution.amount for o in self.data])
+        flow = np.hstack(
             [o.flow * np.ones(len(o.distribution)) for o in self.data]
         )
-        activities = np.hstack(
+        activity = np.hstack(
             [o.activity * np.ones(len(o.distribution)) for o in self.data]
         )
 
         self.df = pd.DataFrame(
             {
-                "times": pd.Series(data=times.astype("datetime64[s]"), dtype="datetime64[s]"),
-                "values": pd.Series(data=values, dtype="float64"),
-                "flows": pd.Series(data=flows, dtype="int"),
-                "activities": pd.Series(data=activities, dtype="int"),
+                "date": pd.Series(data=date.astype("datetime64[s]"), dtype="datetime64[s]"),
+                "amount": pd.Series(data=amount, dtype="float64"),
+                "flow": pd.Series(data=flow, dtype="int"),
+                "activity": pd.Series(data=activity, dtype="int"),
             }
         )
-        self.df.sort_values(by="times", ascending=True, inplace=True)
+        self.df.sort_amount(by="date", ascending=True, inplace=True)
 
     def characterize_dataframe(
         self,
         characterization_function: Callable,
-        activities: set[int] | None = None,
-        flows: set[int] | None = None,
+        flow: set[int] | None = None,
+        activity: set[int] | None = None,
         cumsum: bool | None = True
-    ) -> None:
+    ) -> pd.DataFrame:
         """
         Applies a characterization function to a Timeline Pandas DataFrame.
 
         An input Timeline of the form
 
-        | times | values | flows | activities |
-        |-------|--------|-------|------------|
-        | 101   | 33     | 1     | 2          |
-        | 312   | 21     | 4     | 2          |
+        | date | amount | flow | activity |
+        |-------|-------|------|----------|
+        | 101   | 33    | 1    | 2        |
+        | 312   | 21    | 4    | 2        |
 
         is transformed into
 
-        | times | values | flows | activities |
-        |-------|--------|-------|------------|
-        | 101   | 33     | 1     | 2          |
-        | 102   | 32     | 1     | 2          |
-        | 103   | 31     | 1     | 2          |
-        | 312   | 21     | 4     | 2          |
-        | 313   | 20     | 4     | 2          |
-        | 314   | 19     | 4     | 2          |
+        | date | amount | flow | activity |
+        |------|--------|------|----------|
+        | 101  | 33     | 1    | 2        |
+        | 102  | 31     | 1    | 2        |
+        | 103  | 31     | 1    | 2        |
+        | 312  | 21     | 4    | 2        |
+        | 313  | 20     | 4    | 2        |
+        | 314  | 19     | 4    | 2        |
 
-        Each row of the input Timeline corresponds to a single day (`times`) and the associated value (`values`).
+        Each row of the input Timeline corresponds to a single day (`date`) and the associated value (`amount`).
         The `characterization_function` is applied to each row of the input Timeline for a given `period` of days.
         The new rows are appended to the Timeline Pandas DataFrame.
 
@@ -133,56 +133,70 @@ class Timeline:
             Characterization function to apply to the values Timeline Pandas DataFrame.
         period : int
             Period in days.
-        activity : int
         flow : int
-        """
-        df = self.df.copy()
-        if activities:
-            df = df.loc[self.df["activities"].isin(activities)]
-        if flows:
-            df = df.loc[self.df["flows"].isin(flows)]
-        df.reset_index(drop=True, inplace=True)
-        result_df = pd.concat([characterization_function(row) for _, row in df.iterrows()])
-        if 'times' in result_df.columns:
-            result_df.sort_values(by="times", ascending=True, inplace=True)
-        if cumsum and "values" in result_df:
-            result_df["values_sum"] = result_df["values"].cumsum()
-        return result_df
-
-    def sum_days_to_years(self) -> None:
-        """
-        Sums the day-resolution `values` of the Timeline Pandas DataFrame to years.
-
-        An input Timeline of the form
-
-        | times | values | flows | activities |
-        |-------|--------|-------|------------|
-        | 101   | 33     | 1     | 2          |
-        | 102   | 32     | 1     | 2          |
-        | 103   | 31     | 1     | 2          |
-        | 412   | 21     | 4     | 2          |
-        | 413   | 20     | 4     | 2          |
-        | 514   | 19     | 4     | 2          |
-
-        is transformed into
-
-        | year | values | flows | activities |
-        |-------|--------|-------|------------|
-        | 1     | 96     | 1     | 2          |
-        | 2     | 60     | 4     | 2          |
+        activity : int
 
         Returns
         -------
-        None, modifies the Timeline Pandas DataFrame `df` in place.
+        A Pandas DataFrame with the following columns:
+        - date: datetime64[D]
+        - amount: float64
+        - flow: int
+        - activity: int
+
+        """
+        df = self.df.copy()
+        if activity:
+            df = df.loc[self.df["activity"].isin(activity)]
+        if flow:
+            df = df.loc[self.df["flow"].isin(flow)]
+        df.reset_index(drop=True, inplace=True)
+        result_df = pd.concat([characterization_function(row) for _, row in df.iterrows()])
+        if 'date' in result_df.columns:
+            result_df.sort_amount(by="date", ascending=True, inplace=True)
+        if cumsum and "amount" in result_df:
+            result_df["amount_sum"] = result_df["amount"].cumsum()
+        return result_df
+
+    def sum_days_to_years(self) -> pd.DataFrame:
+        """
+        Sums the day-resolution `amount` of the Timeline Pandas DataFrame to years.
+
+        An input Timeline of the form
+
+        | date | amount | flow | activity |
+        |------|--------|------|----------|
+        | 101  | 33     | 1    | 2        |
+        | 102  | 32     | 1    | 2        |
+        | 103  | 31     | 1    | 2        |
+        | 412  | 21     | 4    | 2        |
+        | 413  | 20     | 4    | 2        |
+        | 514  | 19     | 4    | 2        |
+
+        is transformed into
+
+        | year | amount | flow | activity |
+        |------|--------|------|----------|
+        | 1    | 96     | 1    | 2        |
+        | 2    | 60     | 4    | 2        |
+
+        Returns
+        -------
+        A Pandas DataFrame with the following columns:
+        - year: int
+        - amount: float64
+        - flow: int
+        - activity: int
         """
 
-        _df_grouped = df.groupby([df['times'].dt.year]).agg(
+        result_df = self.df.groupby([self.df['date'].dt.year]).agg(
             {
-                'values': 'sum',
-                'flows': 'first',
-                'activities': 'first'
+                'amount': 'sum',
+                'flow': 'first',
+                'activity': 'first'
             }
         ).reset_index()
 
-        _df_grouped.rename(columns={'times': 'year'})
-        self.df = _df_grouped
+        result_df.rename(columns={'date': 'year'})
+
+        return result_df
