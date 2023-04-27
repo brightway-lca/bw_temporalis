@@ -8,8 +8,9 @@ def characterize_co2(
     cumulative: bool | None = False,
 ) -> pd.DataFrame:
     """
-    Calculate the cumulative radiative forcing (CRF) from CO2 for each year in a given period.
+    Calculate the cumulative or marginal radiative forcing (CRF) from CO2 for each year in a given period.
 
+    If `cumulative` is True, the cumulative CRF is calculated. If `cumulative` is False, the marginal CRF is calculated.
     Takes a single row of the TimeSeries Pandas DataFrame (corresponding to a set of (`date`/`amount`/`flow`/`activity`).
     For each year in the given period, the CRF is calculated.
     Units are watts/square meter/kilogram of CO2.
@@ -29,8 +30,7 @@ def characterize_co2(
 
     See Also
     --------
-    cumulative_CH4: The same function for CH4
-    marginal_CO2: Calculate the marginal radiative forcing (the difference between two years)
+    characterize_methane: The same function for CH4
     """
 
     # functional variables and units (from publications listed in docstring)
@@ -73,8 +73,9 @@ def characterize_co2(
 
 def characterize_methane(series, period: int = 100, cumulative=False) -> pd.DataFrame:
     """
-    Calculate the cumulative radiative forcing (CRF) from CH4 for each year in a given period.
+    Calculate the cumulative or marginal radiative forcing (CRF) from CH4 for each year in a given period.
 
+    If `cumulative` is True, the cumulative CRF is calculated. If `cumulative` is False, the marginal CRF is calculated.
     Takes a single row of the TimeSeries Pandas DataFrame (corresponding to a set of (`date`/`amount`/`flow`/`activity`).
     For earch year in the given period, the CRF is calculated.
     Units are watts/square meter/kilogram of CH4.
@@ -103,7 +104,7 @@ def characterize_methane(series, period: int = 100, cumulative=False) -> pd.Data
 
     See Also
     --------
-    cumulative_CO2: The same function for CO2
+    characterize_co2: The same function for CO2
     """
 
     # functional variables and units (from publications listed in docstring)
