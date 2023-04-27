@@ -134,19 +134,3 @@ class TemporalDistribution:
     def cumulative(self):
         """Return new temporal distribution with cumulative amount"""
         return TemporalDistribution(self.date, np.cumsum(self.amount))
-
-    # def datetime_to_timedelta(self, dt):
-    #     """Convert TD.date of type datetime64 to timedelta64 based on the datetime64 passed
-    #     """
-    #     assert 'datetime64' in str(self.date.dtype),'TemporalDistribution.date must be numpy.datetime64'
-    #     assert isinstance(dt,np.datetime64),'datetime must be numpy.datetime64'
-    #     return  TemporalDistribution(self.date - dt, self.amount)
-
-    # def timedelta_to_datetime(self, dt):
-    #     """Convert TD.date of type timedelta64 to datetime.datetime based on the datetime64 passed
-    #     """
-    #     #converted to datetime.datetime cause timeline._groupby_sum_by_flow is ~5 slower when using np.datetime64
-    #     #while the conversion here to datatime.datetime is almost the same performance wise
-    #     assert 'timedelta64' in str(self.date.dtype),'TemporalDistribution.date must be numpy.datetime64'
-    #     assert isinstance(dt,np.datetime64),'datetime must be numpy.datetime64'
-    #     return  TemporalDistribution((self.date + dt).astype(datetime.datetime) , self.amount)
