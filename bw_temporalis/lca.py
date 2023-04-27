@@ -63,6 +63,7 @@ class TemporalisLCA:
         The unique id of the functional unit. Strongly recommended to leave as default.
 
     """
+
     def __init__(
         self,
         lca_object: LCA,

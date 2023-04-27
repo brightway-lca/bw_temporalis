@@ -78,16 +78,16 @@ class Timeline:
         """
         date = np.hstack([o.distribution.date for o in self.data])
         amount = np.hstack([o.distribution.amount for o in self.data])
-        flow = np.hstack(
-            [o.flow * np.ones(len(o.distribution)) for o in self.data]
-        )
+        flow = np.hstack([o.flow * np.ones(len(o.distribution)) for o in self.data])
         activity = np.hstack(
             [o.activity * np.ones(len(o.distribution)) for o in self.data]
         )
 
         self.df = pd.DataFrame(
             {
-                "date": pd.Series(data=date.astype("datetime64[s]"), dtype="datetime64[s]"),
+                "date": pd.Series(
+                    data=date.astype("datetime64[s]"), dtype="datetime64[s]"
+                ),
                 "amount": pd.Series(data=amount, dtype="float64"),
                 "flow": pd.Series(data=flow, dtype="int"),
                 "activity": pd.Series(data=activity, dtype="int"),
@@ -101,7 +101,7 @@ class Timeline:
         characterization_function: Callable,
         flow: set[int] | None = None,
         activity: set[int] | None = None,
-        cumsum: bool | None = True
+        cumsum: bool | None = True,
     ) -> pd.DataFrame:
         """
         Applies a characterization function to a Timeline Pandas DataFrame.
@@ -152,8 +152,10 @@ class Timeline:
         if flow:
             df = df.loc[self.df["flow"].isin(flow)]
         df.reset_index(drop=True, inplace=True)
-        result_df = pd.concat([characterization_function(row) for _, row in df.iterrows()])
-        if 'date' in result_df.columns:
+        result_df = pd.concat(
+            [characterization_function(row) for _, row in df.iterrows()]
+        )
+        if "date" in result_df.columns:
             result_df.sort_amount(by="date", ascending=True, inplace=True)
             result_df.reset_index(drop=True, inplace=True)
         if cumsum and "amount" in result_df:
@@ -191,14 +193,12 @@ class Timeline:
         - activity: int
         """
 
-        result_df = self.df.groupby([self.df['date'].dt.year]).agg(
-            {
-                'amount': 'sum',
-                'flow': 'first',
-                'activity': 'first'
-            }
-        ).reset_index()
+        result_df = (
+            self.df.groupby([self.df["date"].dt.year])
+            .agg({"amount": "sum", "flow": "first", "activity": "first"})
+            .reset_index()
+        )
 
-        result_df.rename(columns={'date': 'year'})
+        result_df.rename(columns={"date": "year"})
 
         return result_df

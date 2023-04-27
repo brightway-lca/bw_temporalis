@@ -1,6 +1,7 @@
-from bw_temporalis.temporal_distribution import TemporalDistribution as TD
 import numpy as np
 import pytest
+
+from bw_temporalis.temporal_distribution import TemporalDistribution as TD
 
 
 @pytest.fixture
@@ -37,17 +38,17 @@ def test_mul_td(simple):
 
     multiplied = simple * td2
 
-    print(multiplied.times)
-    print(multiplied.values)
+    print(multiplied.date)
+    print(multiplied.amount)
 
     assert np.array_equal(
         np.arange(-1, 6, dtype="timedelta64[D]"),
-        multiplied.times,
+        multiplied.date,
     )
 
-    assert simple.values.sum() * td2.values.sum() == multiplied.values.sum()
+    assert simple.amount.sum() * td2.amount.sum() == multiplied.amount.sum()
 
-    assert np.allclose(np.array((2.0, 4.0, 6.0, 6.0, 6.0, 4.0, 2.0)), multiplied.values)
+    assert np.allclose(np.array((2.0, 4.0, 6.0, 6.0, 6.0, 4.0, 2.0)), multiplied.amount)
 
 
 def test_div_td_error(simple):
@@ -65,30 +66,30 @@ def test_div_td_error_two(simple):
 def test_div_int(simple):
     """check possible division between td and int"""
     divided = simple / 2.0
-    assert np.allclose(divided.values, 1)
+    assert np.allclose(divided.amount, 1)
     assert np.array_equal(
         np.arange(0, 5, dtype="timedelta64[D]"),
-        divided.times,
+        divided.date,
     )
 
 
 def test_mul_number_td(simple):
     simple *= 5
     assert np.array_equal(
-        simple.times,
+        simple.date,
         np.arange(0, 5, dtype="timedelta64[D]"),
     )
-    assert np.allclose(simple.values, np.ones(5) * 10)
+    assert np.allclose(simple.amount, np.ones(5) * 10)
 
 
 def test_mul_number_dt():
     a = TD(np.arange(0, 5, dtype="datetime64[D]"), np.ones(5))
     a *= 5
     assert np.array_equal(
-        simple.times,
+        simple.date,
         np.arange(0, 5, dtype="datetime64[D]"),
     )
-    assert np.allclose(simple.values, np.ones(5) * 5)
+    assert np.allclose(simple.amount, np.ones(5) * 5)
 
 
 def test_add_error_two_datetime(simple):
@@ -115,16 +116,16 @@ def test_add_timedelta_error(simple):
 def test_add_number(simple):
     simple += 5
     assert np.array_equal(
-        simple.times,
+        simple.date,
         np.arange(0, 5, dtype="timedelta64[D]"),
     )
-    assert np.allclose(simple.values, np.ones(5) * 7)
+    assert np.allclose(simple.amount, np.ones(5) * 7)
     simple += 0.5
     assert np.array_equal(
-        simple.times,
+        simple.date,
         np.arange(0, 5, dtype="timedelta64[D]"),
     )
-    assert np.allclose(simple.values, np.ones(5) * 7.5)
+    assert np.allclose(simple.amount, np.ones(5) * 7.5)
 
 
 def test_add_two_tds(simple):
@@ -132,18 +133,18 @@ def test_add_two_tds(simple):
     added = simple + td2
     assert np.array_equal(
         np.array([-1, 0, 1, 2, 3, 4], dtype="timedelta64[D]"),
-        added.times,
+        added.date,
     )
-    assert added.values.sum() == (10 + 3)
-    assert np.array_equal(added.values, [1, 3, 3, 2, 2, 2])
+    assert added.amount.sum() == (10 + 3)
+    assert np.array_equal(added.amount, [1, 3, 3, 2, 2, 2])
 
 
 def test_add_td_to_dt(simple):
     td2 = TD(np.array((-1, 0, 1, 2, 3), dtype="datetime64[D]"), np.ones(5))
     added = simple + td2
     expected = np.array([-1, 1, 3, 5, 7], dtype="datetime64[D]")
-    assert np.array_equal(expected, added.times)
-    assert np.array_equal(added.values, np.ones(5) * 3)
+    assert np.array_equal(expected, added.date)
+    assert np.array_equal(added.amount, np.ones(5) * 3)
 
 
 def test_add_td_to_dt_error(simple):
