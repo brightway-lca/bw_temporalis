@@ -22,10 +22,10 @@ class TemporalisLCA:
     """
     Calculate an LCA using graph traversal, with edges using temporal distributions.
 
-    Edges with temporal distributions should store this information using `"temporal distributions"`:
+    Edges with temporal distributions should store this information using `"temporal_distributions"`:
 
     ```python
-        exchange["temporal distribution"] = bw_temporalis.TemporalDistribution(
+        exchange["temporal_distribution"] = bw_temporalis.TemporalDistribution(
             times=numpy.array([-2, -1, 0, 1, 2], dtype="timedelta64[D]"),
             values=numpy.ones(5)
         )
@@ -136,7 +136,7 @@ class TemporalisLCA:
                     flow.flow_datapackage_id, node.activity_datapackage_id
                 ):
                     value = (
-                        exchange.data.get("temporal distribution")
+                        exchange.data.get("temporal_distribution")
                         or exchange.data["amount"]
                     )
                     timeline.add_flow_temporal_distribution(
@@ -151,7 +151,7 @@ class TemporalisLCA:
                     output_id=node.activity_datapackage_id,
                 )
                 value = (
-                    exchange.data.get("temporal distribution")
+                    exchange.data.get("temporal_distribution")
                     or exchange.data["amount"]
                 ) / node.reference_product_production_amount
                 producer = self.nodes[edge.producer_id]
@@ -183,8 +183,8 @@ class TemporalisLCA:
             total = sum(exc.data["amount"] for exc in exchanges)
             for exc in exchanges:
                 exc.data["amount"] /= total
-                if "temporal distribution" in exc.data:
-                    exc.data["temporal distribution"] /= total
+                if "temporal_distribution" in exc.data:
+                    exc.data["temporal_distribution"] /= total
                 yield exc
         else:
             yield from exchanges
