@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 
-def characterized_co2(
+def characterize_co2(
     series,
     period: int | None = 100,
     cumulative: bool | None = False,
@@ -53,7 +53,7 @@ def characterized_co2(
                 + decay_term(year, alpha_2, tau_2)
                 + decay_term(year, alpha_3, tau_3)
             )
-            for year in period
+            for year in range(period)
         ]
     )
 
@@ -118,7 +118,7 @@ def characterize_methane(series, period: int = 100, cumulative=False) -> pd.Data
     ).astype("timedelta64[s]")
 
     decay_multipliers: list = np.array([
-        (1 + f1 + f2) * alpha * tau * (1 - np.exp(-year / tau)) for year in period
+        (1 + f1 + f2) * alpha * tau * (1 - np.exp(-year / tau)) for year in range(period)
     ])
 
     forcing = pd.Series(data=series.amount * decay_multipliers, dtype="float64")
@@ -133,35 +133,3 @@ def characterize_methane(series, period: int = 100, cumulative=False) -> pd.Data
             "activity": series.activity,
         }
     )
-
-
-def marginal_CRF(df: pd.DataFrame, year_delta: int = 1) -> pd.DataFrame:
-    """
-    Calculate the marginal difference of `amount` for the entire period (`date`).
-
-    Takes the TimeSeries Pandas DataFrame (corresponding to a set of (`date`/`amount`/`flow`/`activity`).
-    For each year, the marginal difference of `amount` is calculated.
-
-    Returns
-    -------
-    A TimeSeries dataframe with the following columns:
-    - date: datetime64[s]
-    - amount: float
-    - flow: str
-    - activity: str
-
-    Notes
-    -----
-    Note that a function calculating cumulative radiative forcing (e.g. `cumulative_CO2`) must be run first.
-    See also the relevant scientific publication on CRF: https://doi.org/10.5194/acp-13-2793-2013
-
-    See Also
-    --------
-    cumulative_CO2: Calculates the required CRF for CO2
-    cumulative_CH4: Calculates the required CRF for CH4
-    """
-
-    amount_marginal: pd.Series = df.amount.diff(periods=year_delta).fillna(0)
-    df["amount"] = amount_marginal
-
-    return df
