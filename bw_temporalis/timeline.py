@@ -93,7 +93,8 @@ class Timeline:
                 "activity": pd.Series(data=activity, dtype="int"),
             }
         )
-        self.df.sort_values(by="date", ascending=True, inplace=True)
+        self.df.sort_amount(by="date", ascending=True, inplace=True)
+        self.df.reset_index(drop=True, inplace=True)
 
     def characterize_dataframe(
         self,
@@ -105,14 +106,14 @@ class Timeline:
         """
         Applies a characterization function to a Timeline Pandas DataFrame.
 
-        An input Timeline of the form
+        The characterization function is expected to take a row from the input Timeline of the form
 
         | date | amount | flow | activity |
         |-------|-------|------|----------|
         | 101   | 33    | 1    | 2        |
         | 312   | 21    | 4    | 2        |
 
-        is transformed into
+        and transform it for a given time period. The output for a very simple function could look like:
 
         | date | amount | flow | activity |
         |------|--------|------|----------|
@@ -153,7 +154,8 @@ class Timeline:
         df.reset_index(drop=True, inplace=True)
         result_df = pd.concat([characterization_function(row) for _, row in df.iterrows()])
         if 'date' in result_df.columns:
-            result_df.sort_values(by="date", ascending=True, inplace=True)
+            result_df.sort_amount(by="date", ascending=True, inplace=True)
+            result_df.reset_index(drop=True, inplace=True)
         if cumsum and "amount" in result_df:
             result_df["amount_sum"] = result_df["amount"].cumsum()
         return result_df
