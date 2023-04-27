@@ -19,30 +19,57 @@ class MultipleTechnosphereExchanges(Exception):
 
 
 class TemporalisLCA:
-    # TBD
-    """Calculate a dynamic LCA, where processes, emissions, and CFs can vary throughout time.
-
-    Args:
-        * *demand* (dict): The functional unit. Same format as in LCA class.
-        * *worst_case_method* (tuple): LCIA method. Same format as in LCA class.
-        * *cutoff* (float, default=0.005): Cutoff criteria to stop LCA calculations. Relative score of total, i.e. 0.005 will cutoff if a dataset has a score less than 0.5 percent of the total.
-        * *max_calc_number* (int, default=10000): Maximum number of LCA calculations to perform.
-        * *loop_cutoff* (int, default=10): Maximum number of times loops encountered will be traversed.
-        * *t0* (datetime, default=np.datetime64('now')): `datetime` of the year zero (i.e. the one of the functional unit).
-        * *group* (Boolean, default=False): When 'True' groups the impact upstream for each of the processes based on the values of `grouping_field`
-        * *grouping_field* (string, default='tempo_group': The bw2 field to look for when grouping impacts upstream. When ``group`==True and a process has `grouping_field==whatever` the impacts are grouped upstream with name ``whatever` untill another  process with `grouping_field==another name` is found. If `grouping_field==True` it simply uses the name of the process
-        * *log* (int, default=False): If True to make log file
-        * *lca_object* (LCA object,default=None): do dynamic LCA for the object passed (must have "characterized_inventory" i.e. LCA_object.lcia() has been called)
     """
+    Calculate an LCA using graph traversal, with edges using temporal distributions.
 
+    Edges with temporal distributions should store this information using `"temporal distributions"`:
+
+    ```python
+        exchange["temporal distribution"] = bw_temporalis.TemporalDistribution(
+            times=numpy.array([-2, -1, 0, 1, 2], dtype="timedelta64[D]"),
+            values=numpy.ones(5)
+        )
+    ```
+
+    Temporal distribution times must always have the data type `timedelta64[D]`. Not all edges need to have temporal distributions.
+
+    Temporal distributions are **not density functions** - their values should sum to the exchange amount.
+
+    As graph traversal is much slower than matrix calculations, we can limit which nodes get traversed in several ways:
+
+    * All activities in a database marked as `static`
+    * Any activity ids passed in `static_activity_indices`
+    * Any activities whose cumulative impact is below the cutoff score
+
+    The output of a Temporalis LCA calculation is a `bw_temporalis.Timeline`, which can be characterized.
+
+    Parameters
+    ----------
+    lca_object : bw2calc.LCA
+        The already instantiated and calculated LCA class (i.e. `.lci()` and `.lcia()` have already been done)
+    starting_datetime : datetime.datetime | str
+        When the functional unit happens. Must be a point in time. Can be `"now"` or `"2023-01-01"`.
+    cutoff : float
+        The fraction of the total score below which graph traversal should stop. In range `(0, 1)`.
+    biosphere_cutoff : float
+        The fraction of the total score below which we don't include separate biosphere nodes to be characterized in the `Timeline`. In range `(0, 1)`.
+    max_calc : int
+        Total number of LCA inventory calculations to perform during graph traversal
+    static_activity_indices : set[int]
+        Activity `id` values where graph traversal will stop
+    skip_coproducts : bool
+        Should we also traverse edges for the other products in multioutput activities?
+    functional_unit_unique_id : int
+        The unique id of the functional unit. Strongly recommended to leave as default.
+
+    """
     def __init__(
         self,
         lca_object: LCA,
         starting_datetime: datetime | str = "now",
-        graph_traversal_config: dict | None = None,
         cutoff: float | None = 5e-3,
         biosphere_cutoff: float | None = 1e-5,
-        max_calc: int | None = 1e5,
+        max_calc: int | None = 2e3,
         static_activity_indices: set[int] | None = set(),
         skip_coproducts: bool | None = False,
         functional_unit_unique_id: int | None = -1,
