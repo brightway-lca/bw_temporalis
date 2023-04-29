@@ -26,12 +26,12 @@ class TemporalisLCA:
 
     ```python
         exchange["temporal_distribution"] = bw_temporalis.TemporalDistribution(
-            times=numpy.array([-2, -1, 0, 1, 2], dtype="timedelta64[D]"),
+            times=numpy.array([-2, -1, 0, 1, 2], dtype="timedelta64[s]"),
             values=numpy.ones(5)
         )
     ```
 
-    Temporal distribution times must always have the data type `timedelta64[D]`. Not all edges need to have temporal distributions.
+    Temporal distribution times must always have the data type `timedelta64[s]`. Not all edges need to have temporal distributions.
 
     Temporal distributions are **not density functions** - their values should sum to the exchange amount.
 
@@ -48,7 +48,7 @@ class TemporalisLCA:
     lca_object : bw2calc.LCA
         The already instantiated and calculated LCA class (i.e. `.lci()` and `.lcia()` have already been done)
     starting_datetime : datetime.datetime | str
-        When the functional unit happens. Must be a point in time. Can be `"now"` or `"2023-01-01"`.
+        When the functional unit happens. Must be a point in time. Normally something like `"now"` or `"2023-01-01"`.
     cutoff : float
         The fraction of the total score below which graph traversal should stop. In range `(0, 1)`.
     biosphere_cutoff : float
@@ -81,7 +81,7 @@ class TemporalisLCA:
         self.lca_object = lca_object
         self.unique_id = functional_unit_unique_id
         self.t0 = TD(
-            np.array([np.datetime64(starting_datetime)]).astype("datetime64[D]"),
+            np.array([np.datetime64(starting_datetime)]),
             np.array([1]),
         )
         for db in bd.databases:
