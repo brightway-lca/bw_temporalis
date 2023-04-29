@@ -44,10 +44,6 @@ class TemporalDistribution:
     def total(self):
         return float(self.amount.sum())
 
-    def nonzero(self):
-        mask = self.amount != 0
-        return TemporalDistribution(self.date[mask], self.amount[mask])
-
     def __getitem__(self, index):
         return TemporalDistribution(
             np.array(self.date[index]), np.array(self.amount[index])
@@ -118,10 +114,6 @@ class TemporalDistribution:
                 "Can't add TemporalDistribution and {}".format(type(other))
             )
 
-    def __iter__(self):
-        for index in range(len(self)):
-            yield (self.date[index], float(self.amount[index]))
-
     def __str__(self):
         return "TemporalDistribution instance with %s amount and total: %.4g" % (
             len(self.amount),
@@ -130,7 +122,3 @@ class TemporalDistribution:
 
     def __repr__(self):
         return str(self)
-
-    def cumulative(self):
-        """Return new temporal distribution with cumulative amount"""
-        return TemporalDistribution(self.date, np.cumsum(self.amount))
