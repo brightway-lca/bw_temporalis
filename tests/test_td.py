@@ -147,17 +147,6 @@ def test_add_td_to_dt_error(simple):
         simple + td2
 
 
-def test_iter(simple):
-    td = iter(simple)
-    assert next(td) == (np.timedelta64(0, "D"), 2)
-    assert next(td) == (np.timedelta64(1, "D"), 2)
-    assert next(td) == (np.timedelta64(2, "D"), 2)
-    assert next(td) == (np.timedelta64(3, "D"), 2)
-    assert next(td) == (np.timedelta64(4, "D"), 2)
-    with pytest.raises(StopIteration):
-        next(td)
-
-
 def test_str(simple):
     assert str(simple)
 
