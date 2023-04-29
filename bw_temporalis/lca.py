@@ -61,6 +61,8 @@ class TemporalisLCA:
         Should we also traverse edges for the other products in multioutput activities?
     functional_unit_unique_id : int
         The unique id of the functional unit. Strongly recommended to leave as default.
+    graph_traversal : bw_graph_tools.GraphTraversal
+        Optional subclass of `GraphTraversal` for advanced usage
 
     """
 
@@ -74,6 +76,7 @@ class TemporalisLCA:
         static_activity_indices: set[int] | None = set(),
         skip_coproducts: bool | None = False,
         functional_unit_unique_id: int | None = -1,
+        graph_traversal: GraphTraversal | None = GraphTraversal,
     ):
         self.lca_object = lca_object
         self.unique_id = functional_unit_unique_id
@@ -91,7 +94,7 @@ class TemporalisLCA:
                 )
 
         print("Starting graph traversal")
-        gt = GraphTraversal.calculate(
+        gt = graph_traversal.calculate(
             lca_object=lca_object,
             static_activity_indices=static_activity_indices,
             max_calc=max_calc,
