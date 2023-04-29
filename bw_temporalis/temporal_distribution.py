@@ -10,6 +10,7 @@ from .convolution import (
     temporal_convolution_timedelta_timedelta,
     datetime_type,
     timedelta_type,
+    consolidate,
 )
 
 
@@ -113,16 +114,18 @@ class TemporalDistribution:
                 date = np.hstack((self.date, other.date))
                 amount = np.hstack((self.amount, other.amount))
                 # same as in __mul__
-                t, v = consolidate(date.view("int64"), amount)
+                t, v = consolidate(date.astype("int64"), amount)
                 return TemporalDistribution(t.astype(timedelta_type), v)
             else:
                 if not len(self) == len(other):
                     raise ValueError("Incompatible dimensions")
                 elif self.base_time_type == timedelta_type:
+                    # `self` is timedelta, `other` is datetime
                     return TemporalDistribution(
                         other.date + self.date, self.amount + other.amount
                     )
                 else:
+                    # `self` is datetime, `other` is timedelta
                     return TemporalDistribution(
                         self.date + other.date, self.amount + other.amount
                     )

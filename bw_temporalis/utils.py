@@ -18,7 +18,7 @@ def get_version_tuple() -> tuple:
     )
 
 
-def supplement_dataframe(df: pd.DataFrame, database_label: str, columns: list[str] | None = ["name", "location", "unit", "categories"]):
+def supplement_dataframe(df: pd.DataFrame, database_label: str, columns: list[str] | None = ["name", "location", "unit", "categories"]) -> pd.DataFrame:
     database_df = bd.Database(database_label).nodes_to_dataframe()
     database_df['activity'] = database_df['flow'] = database_df['id']
     df = df.join(
