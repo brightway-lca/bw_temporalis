@@ -2,7 +2,6 @@ from numbers import Number
 from typing import SupportsFloat, Any, Union
 
 import numpy as np
-from bw2speedups import consolidate
 import numpy.typing as npt
 
 from .convolution import (
