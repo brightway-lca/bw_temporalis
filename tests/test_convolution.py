@@ -20,6 +20,38 @@ def test_conversion_datetime_to_int_and_back_with_modification():
     assert np.array_equal(a_shifted, b)
 
 
+def test_tcdt_very_early_dates():
+    a = np.array(["2022-06-04", "2022-06-05"], dtype="datetime64[s]") - np.array(
+        4000, dtype="timedelta64[Y]"
+    ).astype("timedelta64[s]")
+    b = np.array([7, 8])
+    c = np.array([-2, -1], dtype="timedelta64[D]").astype("timedelta64[s]")
+    d = np.array([-2, -4], dtype=float)
+    date, amount = tcdt(
+        first_date=a,
+        first_amount=b,
+        second_date=c,
+        second_amount=d,
+    )
+    expected_date = np.array(
+        [
+            "-1978-06-02",
+            "-1978-06-03",
+            "-1978-06-04",
+        ],
+        dtype="datetime64[s]",
+    )
+    expected_amount = np.array(
+        [
+            -14,
+            -44,
+            -32,
+        ]
+    )
+    assert np.array_equal(date, expected_date)
+    assert np.array_equal(amount, expected_amount)
+
+
 def test_tcdt():
     a = np.array(
         ["2022-06-04", "2022-06-10", "2022-06-11", "2022-06-12"], dtype="datetime64[s]"
@@ -240,9 +272,9 @@ def test_tctt_only_one():
         second_date=c,
         second_amount=d,
     )
-    expected_date = np.array(
-        [2, 3, 4, 14], dtype="timedelta64[D]"
-    ).astype("timedelta64[s]")
+    expected_date = np.array([2, 3, 4, 14], dtype="timedelta64[D]").astype(
+        "timedelta64[s]"
+    )
     expected_amount = np.array(
         [
             -14,
@@ -250,6 +282,27 @@ def test_tctt_only_one():
             42,
             70,
         ]
+    )
+    assert np.array_equal(date, expected_date)
+    assert np.array_equal(amount, expected_amount)
+
+
+def test_tctt_negative_deltas():
+    a = np.array([-4, 10, 11, -12], dtype="timedelta64[D]").astype("timedelta64[s]")
+    b = np.array([7, 8, 9, 10])
+    c = np.array([-2, -1, 0, 5, 10], dtype="timedelta64[D]").astype("timedelta64[s]")
+    d = np.array([-2, -4, 6, 0, 10], dtype=float)
+    date, amount = tctt(
+        first_date=a,
+        first_amount=b,
+        second_date=c,
+        second_amount=d,
+    )
+    expected_date = np.array(
+        [-14, -13, -12, -6, -5, -4, -2, 6, 8, 9, 10, 11, 20, 21], dtype="timedelta64[D]"
+    ).astype("timedelta64[s]")
+    expected_amount = np.array(
+        [-20, -40, 60, -14, -28, 42, 100, 70, -16, -50, 12, 54, 80, 90]
     )
     assert np.array_equal(date, expected_date)
     assert np.array_equal(amount, expected_amount)
