@@ -3,6 +3,14 @@ from typing import SupportsFloat, Any, Union
 
 import numpy as np
 from bw2speedups import consolidate
+import numpy.typing as npt
+
+from .convolution import (
+    temporal_convolution_datetime_timedelta,
+    temporal_convolution_timedelta_timedelta,
+    datetime_type,
+    timedelta_type,
+)
 
 
 class TemporalDistribution:
@@ -18,23 +26,25 @@ class TemporalDistribution:
     def __init__(self, date: npt.NDArray[np.datetime64 | np.timedelta64], amount: npt.NDArray):
         if not isinstance(date, np.ndarray) or not isinstance(amount, np.ndarray):
             raise ValueError("Invalid input types")
-        if not date.shape == amount.shape:
+        elif not date.shape == amount.shape:
             raise ValueError("Shapes of input `date` and `amount` not identical")
-        if not (
+        elif not (
             np.issubdtype(date.dtype, np.datetime64)
             or np.issubdtype(date.dtype, np.timedelta64)
         ):
-            raise ValueError("Incorrect `date` dtype")
+            raise ValueError(f"Incorrect `date` dtype ({date.dtype})")
+        elif not len(date):
+            raise ValueError("Empty array")
 
-        # Conversion needed for bw2speedups.consolidate function
+        # Conversion needed for `temporal_convolution` functions
         self.amount = amount.astype(np.float64)
 
         if np.issubdtype(date.dtype, np.datetime64):
-            self.date = date.astype("datetime64[D]")
-            self.base_time_type = "datetime64[D]"
+            self.date = date.astype(datetime_type)
+            self.base_time_type = datetime_type
         elif np.issubdtype(date.dtype, np.timedelta64):
-            self.date = date.astype("timedelta64[D]")
-            self.base_time_type = "timedelta64[D]"
+            self.date = date.astype(timedelta_type)
+            self.base_time_type = timedelta_type
         else:
             raise ValueError("`date` must be numpy datetime or timedelta array")
 
@@ -48,27 +58,40 @@ class TemporalDistribution:
     def __mul__(self, other: Union["TemporalDistribution", SupportsFloat]) -> "TemporalDistribution":
         if isinstance(other, TemporalDistribution):
             if (
-                self.base_time_type == "datetime64[D]"
-                and other.base_time_type == "datetime64[D]"
+                self.base_time_type == datetime_type
+                and other.base_time_type == datetime_type
             ):
                 raise ValueError("Can't multiple two datetime arrays")
-
-            date = (self.date.reshape((-1, 1)) + other.date.reshape((1, -1))).ravel()
-            amount = (
-                self.amount.reshape((-1, 1)) * other.amount.reshape((1, -1))
-            ).ravel()
-
-            # Use array view in consolidate
-            # http://stackoverflow.com/a/33528073/4929813
-            t, v = consolidate(date.view("int64"), amount)
-            return TemporalDistribution(t.astype(self.base_time_type), v)
-        else:
-            try:
-                return TemporalDistribution(self.date, self.amount * float(other))
-            except:
-                raise ValueError(
-                    "Can't multiply `TemporalDistribution` and {}".format(type(other))
+            elif self.base_time_type == datetime_type:
+                date, amount = temporal_convolution_datetime_timedelta(
+                    first_date=self.date,
+                    first_amount=self.amount,
+                    second_date=other.date,
+                    second_amount=other.amount,
                 )
+            elif other.base_time_type == datetime_type:
+                date, amount = temporal_convolution_datetime_timedelta(
+                    first_date=other.date,
+                    first_amount=other.amount,
+                    second_date=self.date,
+                    second_amount=self.amount,
+                )
+            else:
+                date, amount = temporal_convolution_timedelta_timedelta(
+                    first_date=self.date,
+                    first_amount=self.amount,
+                    second_date=other.date,
+                    second_amount=other.amount,
+                )
+            return TemporalDistribution(date=date, amount=amount)
+        elif isinstance(other, Number):
+            return TemporalDistribution(
+                date=self.date, amount=self.amount * float(other)
+            )
+        else:
+            raise ValueError(
+                "Can't multiply `TemporalDistribution` and {}".format(type(other))
+            )
 
     def __truediv__(self, other: SupportsFloat) -> "TemporalDistribution":
         if self.base_time_type == datetime_type:
@@ -84,18 +107,18 @@ class TemporalDistribution:
 
     def __add__(self, other: Union["TemporalDistribution", SupportsFloat]) -> "TemporalDistribution":
         if isinstance(other, TemporalDistribution):
-            if self.base_time_type == other.base_time_type == "datetime64[D]":
-                raise ValueError("Can't add two datedate")
-            elif self.base_time_type == other.base_time_type == "timedelta64[D]":
+            if self.base_time_type == other.base_time_type == datetime_type:
+                raise ValueError("Can't add two datetimes")
+            elif self.base_time_type == other.base_time_type == timedelta_type:
                 date = np.hstack((self.date, other.date))
                 amount = np.hstack((self.amount, other.amount))
                 # same as in __mul__
                 t, v = consolidate(date.view("int64"), amount)
-                return TemporalDistribution(t.astype("timedelta64[D]"), v)
+                return TemporalDistribution(t.astype(timedelta_type), v)
             else:
                 if not len(self) == len(other):
                     raise ValueError("Incompatible dimensions")
-                elif self.base_time_type == "timedelta64[D]":
+                elif self.base_time_type == timedelta_type:
                     return TemporalDistribution(
                         other.date + self.date, self.amount + other.amount
                     )
