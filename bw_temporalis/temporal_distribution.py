@@ -1,4 +1,5 @@
 from numbers import Number
+from typing import SupportsFloat, Any, Union
 
 import numpy as np
 from bw2speedups import consolidate
@@ -14,7 +15,7 @@ class TemporalDistribution:
         with the same index.
     """
 
-    def __init__(self, date, amount):
+    def __init__(self, date: npt.NDArray[np.datetime64 | np.timedelta64], amount: npt.NDArray):
         if not isinstance(date, np.ndarray) or not isinstance(amount, np.ndarray):
             raise ValueError("Invalid input types")
         if not date.shape == amount.shape:
@@ -37,19 +38,14 @@ class TemporalDistribution:
         else:
             raise ValueError("`date` must be numpy datetime or timedelta array")
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.amount.shape[0]
 
     @property
-    def total(self):
+    def total(self) -> float:
         return float(self.amount.sum())
 
-    def __getitem__(self, index):
-        return TemporalDistribution(
-            np.array(self.date[index]), np.array(self.amount[index])
-        )
-
-    def __mul__(self, other):
+    def __mul__(self, other: Union["TemporalDistribution", SupportsFloat]) -> "TemporalDistribution":
         if isinstance(other, TemporalDistribution):
             if (
                 self.base_time_type == "datetime64[D]"
@@ -74,19 +70,19 @@ class TemporalDistribution:
                     "Can't multiply `TemporalDistribution` and {}".format(type(other))
                 )
 
-    def __truediv__(self, other):
-        if self.base_time_type == "datetime64[D]":
+    def __truediv__(self, other: SupportsFloat) -> "TemporalDistribution":
+        if self.base_time_type == datetime_type:
             raise ValueError("Can't divide a datetime array")
         elif not isinstance(other, Number):
             raise ValueError("Can only divide time deltas by a number")
         return TemporalDistribution(self.date, self.amount / float(other))
 
-    def __lt__(self, other):
+    def __lt__(self, other: Any) -> bool:
         if not isinstance(other, TemporalDistribution):
             return False
         return self.amount.sum() < other.amount.sum()
 
-    def __add__(self, other):
+    def __add__(self, other: Union["TemporalDistribution", SupportsFloat]) -> "TemporalDistribution":
         if isinstance(other, TemporalDistribution):
             if self.base_time_type == other.base_time_type == "datetime64[D]":
                 raise ValueError("Can't add two datedate")
@@ -114,11 +110,11 @@ class TemporalDistribution:
                 "Can't add TemporalDistribution and {}".format(type(other))
             )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "TemporalDistribution instance with %s amount and total: %.4g" % (
             len(self.amount),
             self.total,
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
