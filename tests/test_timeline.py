@@ -1,8 +1,27 @@
 import numpy as np
 import pandas as pd
 import pytest
+from bw_temporalis.temporal_distribution import TemporalDistribution
+from bw_temporalis.timeline import EmptyTimeline, Timeline, FlowTD
 
-from bw_temporalis.timeline import Timeline
+
+def test_empty_timeline_build_dataframe_missing():
+    tl = Timeline()
+    with pytest.raises(EmptyTimeline):
+        tl.build_dataframe()
+
+
+@pytest.mark.skip("Empty `TemporalDistribution` will raise an error")
+def test_empty_timeline_build_dataframe_blank_tds():
+    empty_temp_dist = TemporalDistribution(
+        date=np.array([], dtype="datetime64[D]"),
+        amount=np.array([])
+    )
+    tl = Timeline()
+    tl.add_flow_temporal_distribution(empty_temp_dist, 7, 11)
+    tl.add_flow_temporal_distribution(empty_temp_dist, 3, 4)
+    with pytest.raises(EmptyTimeline):
+        tl.build_dataframe()
 
 
 def define_dataframes() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
