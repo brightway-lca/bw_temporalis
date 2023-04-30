@@ -5,6 +5,8 @@ from typing import Union
 import bw2data as bd
 import pandas as pd
 from tqdm import tqdm
+import numpy as np
+import numpy.typing as npt
 
 from .temporal_distribution import TemporalDistribution
 
