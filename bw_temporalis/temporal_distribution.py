@@ -113,7 +113,7 @@ class TemporalDistribution:
                 date = np.hstack((self.date, other.date))
                 amount = np.hstack((self.amount, other.amount))
                 # same as in __mul__
-                t, v = consolidate(date.astype("int64"), amount)
+                t, v = consolidate(indices=date.astype("int64"), amounts=amount)
                 return TemporalDistribution(t.astype(timedelta_type), v)
             else:
                 if not len(self) == len(other):
