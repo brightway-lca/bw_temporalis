@@ -154,7 +154,7 @@ class Timeline:
         Returns
         -------
         A Pandas DataFrame with the following columns:
-        - date: datetime64[D]
+        - date: datetime64[s]
         - amount: float64
         - flow: int
         - activity: int
