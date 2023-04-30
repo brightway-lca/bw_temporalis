@@ -1,5 +1,5 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 
 def characterize_co2(
@@ -118,9 +118,12 @@ def characterize_methane(series, period: int = 100, cumulative=False) -> pd.Data
         start=0, stop=period, dtype="timedelta64[Y]"
     ).astype("timedelta64[s]")
 
-    decay_multipliers: list = np.array([
-        (1 + f1 + f2) * alpha * tau * (1 - np.exp(-year / tau)) for year in range(period)
-    ])
+    decay_multipliers: list = np.array(
+        [
+            (1 + f1 + f2) * alpha * tau * (1 - np.exp(-year / tau))
+            for year in range(period)
+        ]
+    )
 
     forcing = pd.Series(data=series.amount * decay_multipliers, dtype="float64")
     if not cumulative:

@@ -1,10 +1,8 @@
 import numpy as np
 import pytest
 
-from bw_temporalis.convolution import (
-    temporal_convolution_datetime_timedelta as tcdt,
-    temporal_convolution_timedelta_timedelta as tctt,
-)
+from bw_temporalis.convolution import temporal_convolution_datetime_timedelta as tcdt
+from bw_temporalis.convolution import temporal_convolution_timedelta_timedelta as tctt
 
 
 def test_conversion_datetime_to_int_and_back():

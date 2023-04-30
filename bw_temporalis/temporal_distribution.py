@@ -1,15 +1,15 @@
 from numbers import Number
-from typing import SupportsFloat, Any, Union
+from typing import Any, SupportsFloat, Union
 
 import numpy as np
 import numpy.typing as npt
 
 from .convolution import (
+    consolidate,
+    datetime_type,
     temporal_convolution_datetime_timedelta,
     temporal_convolution_timedelta_timedelta,
-    datetime_type,
     timedelta_type,
-    consolidate,
 )
 
 
@@ -23,7 +23,9 @@ class TemporalDistribution:
         with the same index.
     """
 
-    def __init__(self, date: npt.NDArray[np.datetime64 | np.timedelta64], amount: npt.NDArray):
+    def __init__(
+        self, date: npt.NDArray[np.datetime64 | np.timedelta64], amount: npt.NDArray
+    ):
         if not isinstance(date, np.ndarray) or not isinstance(amount, np.ndarray):
             raise ValueError("Invalid input types")
         elif not date.shape == amount.shape:
@@ -55,7 +57,9 @@ class TemporalDistribution:
     def total(self) -> float:
         return float(self.amount.sum())
 
-    def __mul__(self, other: Union["TemporalDistribution", SupportsFloat]) -> "TemporalDistribution":
+    def __mul__(
+        self, other: Union["TemporalDistribution", SupportsFloat]
+    ) -> "TemporalDistribution":
         if isinstance(other, TemporalDistribution):
             if (
                 self.base_time_type == datetime_type
@@ -105,7 +109,9 @@ class TemporalDistribution:
             return False
         return self.amount.sum() < other.amount.sum()
 
-    def __add__(self, other: Union["TemporalDistribution", SupportsFloat]) -> "TemporalDistribution":
+    def __add__(
+        self, other: Union["TemporalDistribution", SupportsFloat]
+    ) -> "TemporalDistribution":
         if isinstance(other, TemporalDistribution):
             if self.base_time_type == other.base_time_type == datetime_type:
                 raise ValueError("Can't add two datetimes")

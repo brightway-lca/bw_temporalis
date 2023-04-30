@@ -9,6 +9,7 @@ from .temporal_distribution import TemporalDistribution
 
 class EmptyTimeline(Exception):
     """Operation on empty timeline"""
+
     pass
 
 
@@ -89,7 +90,11 @@ class Timeline:
         # Not really testable; `TemporalDistribution` will raise an error with an
         # empty array. But our users are creative...
         if not len(date):
-            raise EmptyTimeline("This timeline is empty; element: {}".format([len(x) for x in self.data]))
+            raise EmptyTimeline(
+                "This timeline is empty; element: {}".format(
+                    [len(x) for x in self.data]
+                )
+            )
 
         amount = np.hstack([o.distribution.amount for o in self.data])
         flow = np.hstack([o.flow * np.ones(len(o.distribution)) for o in self.data])

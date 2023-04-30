@@ -1,1 +1,1 @@
-from .climate import characterize_methane, characterize_co2
+from .climate import characterize_co2, characterize_methane
