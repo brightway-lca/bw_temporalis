@@ -33,7 +33,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        py-version: ["3.10", "3.11"]
+        py-version: ["3.10"] # 3.11 build of scikit-network is broken
 
     steps:
       - uses: actions/checkout@v2
