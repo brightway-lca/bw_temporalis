@@ -17,6 +17,26 @@ class IncongruentDistribution(Exception):
     pass
 
 
+def _array(start: int, end: int, steps: int, mode: str, param: str | None) -> npt.NDArray[int]:
+    if mode == "uniform":
+        return np.linspace(start, end, steps).astype("datetime64[s]")
+    elif mode == "triangular":
+        pass
+    elif mode == "normal":
+        pass
+
+
+def easy_datetime_array(start: str, end: str, total: float, steps: int, mode: str | None = "Uniform", param: str | None = None) -> TemporalDistribution:
+    if mode not in ("uniform", "triangular", "normal"):
+        raise ValueError("Mode must be one of uniform, triangular, or normal")
+
+    start = np.array(start, dtype="datetime64[s]").astype(int)
+    end = np.array(end, dtype="datetime64[s]").astype(int)
+    amount = np.ones(steps) / steps * total
+    date = _array(start, end, steps, mode, param)
+    return TemporalDistribution(date=date, amount=amount)
+
+
 def check_database_exchanges(database_label: str) -> None:
     """Check the sum of an exchange ``TemporalDistribution.amount`` is close to its ``amount`` value.
 
