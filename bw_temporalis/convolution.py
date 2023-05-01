@@ -2,7 +2,6 @@ import numpy as np
 import numpy.typing as npt
 from scipy.sparse import csr_array
 
-
 OFFSET = 31536000000000
 datetime_type = np.dtype("datetime64[s]")
 timedelta_type = np.dtype("timedelta64[s]")

@@ -3,11 +3,12 @@ import numpy as np
 import pytest
 from bw2data.tests import bw2test
 
-from bw_temporalis import (
+from bw_temporalis import (  # easy_datetime_distribution,; easy_timedelta_distribution,
     IncongruentDistribution,
     TemporalDistribution,
     check_database_exchanges,
 )
+from bw_temporalis.utils import normalized_data_array
 
 
 @pytest.fixture
@@ -77,3 +78,30 @@ def test_check_database_exchanges_error(db):
     with pytest.raises(IncongruentDistribution) as exc:
         check_database_exchanges("test")
         assert str(exc.value) == EXPECTED
+
+
+def test_normalized_data_array_invalid_kind():
+    with pytest.raises(ValueError):
+        normalized_data_array(10, "foo", None)
+
+
+def test_normalized_data_array_normal_no_param():
+    with pytest.raises(ValueError):
+        normalized_data_array(10, "normal", None)
+
+
+def test_normalized_data_array_normal_invalid_param():
+    with pytest.raises(ValueError):
+        normalized_data_array(10, "normal", 0)
+    with pytest.raises(ValueError):
+        normalized_data_array(10, "normal", -0.2)
+
+
+def test_normalized_data_array_normal():
+    normalized_data_array(1000, "normal", 0.2)
+    # assert -0.05 < np.mean(arr) < 0.05
+
+
+def test_normalized_data_array_uniform():
+    arr = normalized_data_array(3, "uniform", None)
+    assert np.array_equal(arr, [1, 1, 1])

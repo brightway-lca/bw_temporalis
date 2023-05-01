@@ -1,12 +1,14 @@
 import importlib.metadata
 import math
+from numbers import Number
 from typing import Union
 
 import bw2data as bd
-import pandas as pd
-from tqdm import tqdm
 import numpy as np
 import numpy.typing as npt
+import pandas as pd
+from scipy.stats import norm, triang
+from tqdm import tqdm
 
 from .temporal_distribution import TemporalDistribution
 
@@ -17,23 +19,159 @@ class IncongruentDistribution(Exception):
     pass
 
 
-def _array(start: int, end: int, steps: int, mode: str, param: str | None) -> npt.NDArray[int]:
-    if mode == "uniform":
-        return np.linspace(start, end, steps).astype("datetime64[s]")
-    elif mode == "triangular":
-        pass
-    elif mode == "normal":
-        pass
+def normalized_data_array(
+    steps: int, kind: str, param: float | None
+) -> npt.NDArray[int]:
+    if kind == "uniform":
+        return np.ones(steps)
+    elif kind == "triangular":
+        # Zero probability at bounds
+        return triang.pdf(
+            np.linspace(1 / (steps * 2), 1 - 1 / (steps * 2), steps),
+            float(param) if param is not None else 0.5,
+        )
+    elif kind == "normal":
+        if not (isinstance(param, Number) and param > 0):
+            raise ValueError(
+                "Numerical standard deviation (`param`) greater than zero required for Normal distribution"
+            )
+        return norm.pdf(np.linspace(-0.5, 0.5, steps), param)
+    else:
+        raise ValueError(f"Unrecognized array kind {kind}")
 
 
-def easy_datetime_array(start: str, end: str, total: float, steps: int, mode: str | None = "Uniform", param: str | None = None) -> TemporalDistribution:
-    if mode not in ("uniform", "triangular", "normal"):
-        raise ValueError("Mode must be one of uniform, triangular, or normal")
+def easy_datetime_distribution(
+    start: str,
+    end: str,
+    total: float,
+    steps: int | None = 50,
+    kind: str | None = "uniform",
+    param: float | None = None,
+) -> TemporalDistribution:
+    """Generate a datetime `TemporalDistribution` with a few input parameters.
+
+    Can generate distributions whose `amount` values are uniformly, triangularly, or normally distributed. Please build more complicated distributions manually.
+
+    Only the `amount` values are distributed, the resulting distribution `date` values are uniformly spaced from `start` to `end`.
+
+    For triangular distributions, `param` is the mode (optional). For lognormal distributions, `param` is the standard deviation (required). `param` is not used for the uniform distribution.
+
+    Raises
+    ------
+    ValueError
+        If the input parameters prevent construction of valide `TemporalDistribution`.
+
+    Parameters
+    ----------
+    start : str
+        Datetime marking the start (inclusive) of the distribution, e.g. "now", "2023-02-01", "2023-03-02T12:34:56"
+    end : str
+        Datetime marking the end (inclusive) of the distribution, e.g. "now", "2023-02-01", "2023-03-02T12:34:56"
+    total : float
+        Total amount of the distribution, i.e. value of `amount.sum()`.
+    steps : int, optional
+        Number of values in discrete distribution. Normally not more than 50 or 100.
+    kind : str, optional
+        Distribution type. Must be one of "uniform", "triangular", or "normal"
+    param : float, optional
+        Input parameter to define triangular or normal distribution
+
+    Returns
+    -------
+    A `TemporalDistribution` instance.
+
+    """
+    # Check carefully as new users will do interesting things
+    if not np.isreal(total):
+        raise ValueError(f"Invalid `total` value {total}")
+    if not isinstance(steps, int) or not steps > 1:
+        raise ValueError(
+            f"`steps` must be a positive number greater than one; got {steps}"
+        )
 
     start = np.array(start, dtype="datetime64[s]").astype(int)
     end = np.array(end, dtype="datetime64[s]").astype(int)
-    amount = np.ones(steps) / steps * total
-    date = _array(start, end, steps, mode, param)
+
+    if start >= end:
+        raise ValueError(f"Start value is later than end: {start}, {end}")
+
+    date = np.linspace(start, end, steps).astype("datetime64[s]")
+    amount = normalized_data_array(steps, kind, param)
+
+    # Could get NaN or Inf with strange `param` values
+    mask = np.isreal(amount)
+    amount, date = amount[mask], date[mask]
+
+    # Normalize after removing possible NaN/Inf
+    amount *= total / amount.sum()
+    return TemporalDistribution(date=date, amount=amount)
+
+
+def easy_timedelta_distribution(
+    start: int,
+    end: int,
+    resolution: str,
+    total: float,
+    steps: int | None = 50,
+    kind: str | None = "uniform",
+    param: float | None = None,
+) -> TemporalDistribution:
+    """Generate a timedelta `TemporalDistribution` with a few input parameters.
+
+    Can generate distributions whose `amount` values are uniformly, triangularly, or normally distributed. Please build more complicated distributions manually.
+
+    Only the `amount` values are distributed, the resulting distribution `date` values are uniformly spaced from `start` to `end`.
+
+    For triangular distributions, `param` is the mode (optional). For lognormal distributions, `param` is the standard deviation (required). `param` is not used for the uniform distribution.
+
+    Raises
+    ------
+    ValueError
+        If the input parameters prevent construction of valide `TemporalDistribution`.
+
+    Parameters
+    ----------
+    start : int
+        Start (inclusive) of the distribution in `resolution` units
+    end : int
+        End (inclusive) of the distribution in `resolution` units
+    resolution : str
+        Resolution of the created `timedelta64` array. One of `Y` (year), `M` (month), `D` (day), `H` (hour), `s` (second)
+    total : float
+        Total amount of the distribution, i.e. value of `amount.sum()`.
+    steps : int, optional
+        Number of values in discrete distribution. Normally not more than 50 or 100.
+    kind : str, optional
+        Distribution type. Must be one of "uniform", "triangular", or "normal"
+    param : float, optional
+        Input parameter to define triangular or normal distribution
+
+    Returns
+    -------
+    A `TemporalDistribution` instance.
+
+    """
+    # Check carefully as new users will do interesting things
+    if not np.isreal(total):
+        raise ValueError(f"Invalid `total` value {total}")
+    if not isinstance(steps, int) or not steps > 1:
+        raise ValueError(
+            f"`steps` must be a positive number greater than one; got {steps}"
+        )
+    if resolution not in "YMDHs":
+        raise ValueError(f"Invalid temporal resolution {resolution}")
+    if start >= end:
+        raise ValueError(f"Start value is later than end: {start}, {end}")
+
+    date = np.array(np.linspace(start, end, steps), dtype=f"timedelta64[{resolution}]")
+    amount = normalized_data_array(steps, kind, param)
+
+    # Could get NaN or Inf with strange `param` values
+    mask = np.isreal(amount)
+    amount, date = amount[mask], date[mask]
+
+    # Normalize after removing possible NaN/Inf
+    amount *= total / amount.sum()
     return TemporalDistribution(date=date, amount=amount)
 
 

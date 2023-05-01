@@ -6,6 +6,8 @@ __all__ = (
     "TemporalDistribution",
     "TemporalisLCA",
     "Timeline",
+    "easy_datetime_distribution",
+    "easy_timedelta_distribution",
 )
 
 from .lca import TemporalisLCA
@@ -14,6 +16,8 @@ from .timeline import Timeline
 from .utils import (
     IncongruentDistribution,
     check_database_exchanges,
+    easy_datetime_distribution,
+    easy_timedelta_distribution,
     get_version_tuple,
     supplement_dataframe,
 )
