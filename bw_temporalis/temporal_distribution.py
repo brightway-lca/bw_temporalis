@@ -149,3 +149,25 @@ class TemporalDistribution:
 
     def __repr__(self) -> str:
         return str(self)
+
+    def graph(self, style: str | None = "fivethirtyeight"):
+        """Graph the temporal distribution.
+
+        This isn't too difficult, if you need more customization write your own :)"""
+        try:
+            from matplotlib import pyplot as plt
+        except ImportError:
+            raise ImportError("`matplotlib` required for this function")
+        plt.style.use(style)
+        axis = plt.gca()
+        axis.plot(self.date, self.amount, marker=".", lw=0)
+
+        if np.issubdtype(self.date.dtype, np.datetime64):
+            axis.set_xlabel("Date")
+        else:
+            axis.set_xlabel("Time (seconds)")
+        axis.set_ylabel("Amount")
+        plt.tight_layout()
+        plt.xticks(rotation=30)
+
+        return axis
