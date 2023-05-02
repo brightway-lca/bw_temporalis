@@ -65,7 +65,8 @@ def easy_datetime_distribution(
     Only the `amount` values are distributed, the resulting distribution
     `date` values are uniformly spaced from `start` to `end`.
 
-    For triangular distributions, `param` is the mode (optional). The `param`
+    For triangular distributions, `param` is the mode (optional), and should
+    be given in the same reference system as `start` and `stop`. The `param`
     value should be in the same format as `start` and `end`, e.g.
     "2023-01-01".
 
@@ -110,6 +111,14 @@ def easy_datetime_distribution(
 
     if start >= end:
         raise ValueError(f"Start value is later than end: {start}, {end}")
+
+    if kind == "triangular" and param is not None:
+        # Normalize to (0, 1) interval
+        param = (np.array(param, dtype="datetime64[s]").astype(int) - start) / (
+            end - start
+        )
+        if not 0 <= param <= 1:
+            raise ValueError("Triangular mode is outside (start, end) bounds")
 
     date = np.linspace(start, end, steps).astype("datetime64[s]")
     amount = normalized_data_array(steps, kind, param)
@@ -178,6 +187,12 @@ def easy_timedelta_distribution(
         raise ValueError(f"Invalid temporal resolution {resolution}")
     if start >= end:
         raise ValueError(f"Start value is later than end: {start}, {end}")
+
+    if kind == "triangular" and param is not None:
+        # Normalize to (0, 1) interval
+        param = (param - start) / (end - start)
+        if not 0 <= param <= 1:
+            raise ValueError("Triangular mode is outside (start, end) bounds")
 
     date = np.array(np.linspace(start, end, steps), dtype=f"timedelta64[{resolution}]")
     amount = normalized_data_array(steps, kind, param)

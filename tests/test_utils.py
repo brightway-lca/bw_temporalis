@@ -167,6 +167,48 @@ def test_easy_datetime_distribution_invalid_start():
         easy_datetime_distribution("now", "2023-01-01", total=7.7)
 
 
+def test_easy_datetime_distribution_triangular_invalid_mode():
+    with pytest.raises(ValueError):
+        easy_datetime_distribution(
+            start="2023-01-01",
+            end="2023-01-05",
+            total=5,
+            steps=5,
+            kind="triangular",
+            param="2023-01-06",
+        )
+    with pytest.raises(ValueError):
+        easy_datetime_distribution(
+            start="2023-01-01",
+            end="2023-01-05",
+            total=5,
+            steps=5,
+            kind="triangular",
+            param="2022-12-31",
+        )
+
+
+def test_easy_datetime_distribution_triangular_mode_at_bounds():
+    td = easy_datetime_distribution(
+        start="2023-01-01",
+        end="2023-01-05",
+        total=5,
+        steps=5,
+        kind="triangular",
+        param="2023-01-01",
+    )
+    amount_expected = np.array([2.0, 1.5, 1.0, 0.5, 0.0])
+    amount_expected *= 5 / amount_expected.sum()
+    date_expected = np.array(
+        ["2023-01-01", "2023-01-02", "2023-01-03", "2023-01-04", "2023-01-05"],
+        "datetime64[D]",
+    ).astype("datetime64[s]")
+
+    assert date_expected.dtype == td.date.dtype
+    assert np.allclose(td.date.astype(int), date_expected.astype(int))
+    assert np.allclose(td.amount, amount_expected)
+
+
 def test_easy_datetime_distribution_triangular_specify_mode():
     td = easy_datetime_distribution(
         start="2023-01-01",
@@ -174,7 +216,7 @@ def test_easy_datetime_distribution_triangular_specify_mode():
         total=5,
         steps=5,
         kind="triangular",
-        param=0.2,
+        param="2023-01-02",
     )
     amount_expected = np.array([0.0, 1.875, 1.25, 0.625, 0.0])
     amount_expected *= 5 / amount_expected.sum()
@@ -322,6 +364,49 @@ def test_easy_timedelta_distribution_triangular_default_mode():
     assert np.allclose(td.amount, amount_expected)
 
 
+def test_easy_timedelta_distribution_triangular_mode_at_bounds():
+    td = easy_timedelta_distribution(
+        start=-10,
+        end=10,
+        total=17,
+        resolution="m",
+        steps=5,
+        kind="triangular",
+        param=10,
+    )
+    date_expected = np.linspace(-10, 10, 5, dtype="timedelta64[m]").astype(
+        "timedelta64[s]"
+    )
+    amount_expected = np.array([0.0, 1.7, 3.4, 5.1, 6.8]).astype(float)
+    amount_expected *= 17 / amount_expected.sum()
+
+    assert date_expected.dtype == td.date.dtype
+    assert np.allclose(td.date.astype(int), date_expected.astype(int))
+    assert np.allclose(td.amount, amount_expected)
+
+
+def test_easy_timedelta_distribution_triangular_invalid_mode():
+    with pytest.raises(ValueError):
+        easy_timedelta_distribution(
+            start=-10,
+            end=10,
+            total=17,
+            resolution="m",
+            steps=5,
+            param=-11,
+            kind="triangular",
+        )
+        easy_timedelta_distribution(
+            start=-10,
+            end=10,
+            total=17,
+            resolution="m",
+            steps=5,
+            param=11,
+            kind="triangular",
+        )
+
+
 def test_easy_timedelta_distribution_triangular_custom_mode():
     td = easy_timedelta_distribution(
         start=-10,
@@ -329,7 +414,7 @@ def test_easy_timedelta_distribution_triangular_custom_mode():
         total=17,
         resolution="m",
         steps=5,
-        param=0.2,
+        param=-6,
         kind="triangular",
     )
     date_expected = np.linspace(-10, 10, 5, dtype="timedelta64[m]").astype(
