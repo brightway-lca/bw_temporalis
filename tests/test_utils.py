@@ -3,10 +3,12 @@ import numpy as np
 import pytest
 from bw2data.tests import bw2test
 
-from bw_temporalis import (  # easy_datetime_distribution,; easy_timedelta_distribution,
+from bw_temporalis import (
     IncongruentDistribution,
     TemporalDistribution,
     check_database_exchanges,
+    easy_datetime_distribution,
+    easy_timedelta_distribution,
 )
 from bw_temporalis.utils import normalized_data_array
 
@@ -98,10 +100,261 @@ def test_normalized_data_array_normal_invalid_param():
 
 
 def test_normalized_data_array_normal():
-    normalized_data_array(1000, "normal", 0.2)
-    # assert -0.05 < np.mean(arr) < 0.05
+    arr = normalized_data_array(10, "normal", 0.2)
+    expected = np.array(
+        [
+            0.0876415,
+            0.30121448,
+            0.76032691,
+            1.40955938,
+            1.91922054,
+            1.91922054,
+            1.40955938,
+            0.76032691,
+            0.30121448,
+            0.0876415,
+        ]
+    )
+    assert np.allclose(arr, expected)
+    assert arr.shape == (10,)
+
+    arr = normalized_data_array(5, "normal", 0.5)
+    expected = np.array([0.48394145, 0.70413065, 0.79788456, 0.70413065, 0.48394145])
+    assert np.allclose(arr, expected)
+    assert arr.shape == (5,)
 
 
 def test_normalized_data_array_uniform():
     arr = normalized_data_array(3, "uniform", None)
     assert np.array_equal(arr, [1, 1, 1])
+
+
+def test_normalized_data_array_triangular_invalid_param():
+    with pytest.raises(ValueError):
+        normalized_data_array(10, "trianguarl", "foo")
+    with pytest.raises(ValueError):
+        normalized_data_array(10, "trianguarl", 1.2)
+    with pytest.raises(ValueError):
+        normalized_data_array(10, "trianguarl", -0.2)
+
+
+def test_normalized_data_array_triangular():
+    arr = normalized_data_array(5, "triangular", None)
+    expected = np.array([0, 1, 2, 1, 0])
+    assert np.allclose(arr, expected)
+    assert arr.shape == (5,)
+
+    arr = normalized_data_array(5, "triangular", 0.2)
+    expected = np.array([0.0, 1.875, 1.25, 0.625, 0.0])
+    assert np.allclose(arr, expected)
+    assert arr.shape == (5,)
+
+
+def test_easy_datetime_distribution_invalid_total():
+    with pytest.raises(ValueError):
+        easy_datetime_distribution("2023-01-01", "now", total="foo")
+
+
+def test_easy_datetime_distribution_invalid_steps():
+    with pytest.raises(ValueError):
+        easy_datetime_distribution("2023-01-01", "now", total=7.7, steps="foo")
+    with pytest.raises(ValueError):
+        easy_datetime_distribution("2023-01-01", "now", total=7.7, steps=1)
+
+
+def test_easy_datetime_distribution_invalid_start():
+    with pytest.raises(ValueError):
+        easy_datetime_distribution("now", "2023-01-01", total=7.7)
+
+
+def test_easy_datetime_distribution_triangular_specify_mode():
+    td = easy_datetime_distribution(
+        start="2023-01-01",
+        end="2023-01-05",
+        total=5,
+        steps=5,
+        kind="triangular",
+        param=0.2,
+    )
+    amount_expected = np.array([0.0, 1.875, 1.25, 0.625, 0.0])
+    amount_expected *= 5 / amount_expected.sum()
+    date_expected = np.array(
+        ["2023-01-01", "2023-01-02", "2023-01-03", "2023-01-04", "2023-01-05"],
+        "datetime64[D]",
+    ).astype("datetime64[s]")
+
+    assert date_expected.dtype == td.date.dtype
+    assert np.allclose(td.date.astype(int), date_expected.astype(int))
+    assert np.allclose(td.amount, amount_expected)
+
+
+def test_easy_datetime_distribution_triangular_default_mode():
+    td = easy_datetime_distribution(
+        start="2023-01-01", end="2023-01-05", total=5, steps=5, kind="triangular"
+    )
+    amount_expected = np.array([0, 1, 2, 1, 0]).astype(float)
+    amount_expected *= 5 / amount_expected.sum()
+    date_expected = np.array(
+        ["2023-01-01", "2023-01-02", "2023-01-03", "2023-01-04", "2023-01-05"],
+        "datetime64[D]",
+    ).astype("datetime64[s]")
+
+    assert date_expected.dtype == td.date.dtype
+    assert np.allclose(td.date.astype(int), date_expected.astype(int))
+    assert np.allclose(td.amount, amount_expected)
+
+
+def test_easy_datetime_distribution_uniform():
+    td = easy_datetime_distribution(
+        start="2023-01-01", end="2023-01-05", total=10, steps=5
+    )
+    date_expected = np.array(
+        ["2023-01-01", "2023-01-02", "2023-01-03", "2023-01-04", "2023-01-05"],
+        "datetime64[D]",
+    ).astype("datetime64[s]")
+    amount_expected = np.ones(5) * 2
+
+    assert date_expected.dtype == td.date.dtype
+    assert np.allclose(td.date.astype(int), date_expected.astype(int))
+    assert np.allclose(td.amount, amount_expected)
+
+
+def test_easy_datetime_distribution_normal():
+    td = easy_datetime_distribution(
+        start="2023-01-01",
+        end="2023-01-05",
+        total=10,
+        steps=5,
+        kind="normal",
+        param=0.5,
+    )
+    amount_expected = np.array(
+        [0.48394145, 0.70413065, 0.79788456, 0.70413065, 0.48394145]
+    )
+    amount_expected *= 10 / amount_expected.sum()
+    date_expected = np.array(
+        ["2023-01-01", "2023-01-02", "2023-01-03", "2023-01-04", "2023-01-05"],
+        "datetime64[D]",
+    ).astype("datetime64[s]")
+
+    assert date_expected.dtype == td.date.dtype
+    assert np.allclose(td.date.astype(int), date_expected.astype(int))
+    assert np.allclose(td.amount, amount_expected)
+
+
+def test_easy_datetime_distribution_default_steps():
+    td = easy_datetime_distribution(start="2023-01-01", end="2023-05-01", total=10)
+    assert td.date.shape == (50,)
+    assert td.amount.shape == (50,)
+
+
+def test_easy_timedelta_distribution_invalid_total():
+    with pytest.raises(ValueError):
+        easy_timedelta_distribution(-10, 10, resolution="D", total="foo")
+
+
+def test_easy_timedelta_distribution_invalid_steps():
+    with pytest.raises(ValueError):
+        easy_timedelta_distribution(-10, 10, resolution="D", total=7.7, steps="foo")
+    with pytest.raises(ValueError):
+        easy_timedelta_distribution(-10, 10, resolution="D", total=7.7, steps=1)
+
+
+def test_easy_timedelta_distribution_invalid_start():
+    with pytest.raises(ValueError):
+        easy_timedelta_distribution(10, -10, resolution="D", total=7.7)
+
+
+def test_easy_timedelta_distribution_invalid_resolution():
+    with pytest.raises(ValueError):
+        easy_timedelta_distribution(-10, 10, resolution="Z", total=7.7)
+
+
+def test_easy_timedelta_distribution_resolutions():
+    def f(resolution, constant):
+        td = easy_timedelta_distribution(
+            -10, 10, resolution=resolution, steps=21, total=14
+        )
+        # We should be doing the conversion ourselves, but then we would need to get
+        # the rounding right. This is easier for now.
+        expected = (
+            np.linspace(-10, 10, 21)
+            .astype(f"timedelta64[{resolution}]")
+            .astype("timedelta64[s]")
+            .astype(int)
+        )
+        assert np.array_equal(td.date.astype(int), expected)
+
+    f("s", 1)
+    f("m", 60)
+    f("h", 60 * 60)
+    f("D", 60 * 60 * 24)
+    f("M", 60 * 60 * 24 * 30)
+    f("Y", 60 * 60 * 24 * 365)
+
+
+def test_easy_timedelta_distribution_uniform():
+    td = easy_timedelta_distribution(
+        start=-10, end=10, total=17, resolution="m", steps=21
+    )
+    date_expected = np.linspace(-10, 10, 21, dtype="timedelta64[m]").astype(
+        "timedelta64[s]"
+    )
+    amount_expected = np.ones(21).astype(float) * 17 / 21
+
+    assert date_expected.dtype == td.date.dtype
+    assert np.allclose(td.date.astype(int), date_expected.astype(int))
+    assert np.allclose(td.amount, amount_expected)
+
+
+def test_easy_timedelta_distribution_triangular_default_mode():
+    td = easy_timedelta_distribution(
+        start=-10, end=10, total=17, resolution="m", steps=5, kind="triangular"
+    )
+    date_expected = np.linspace(-10, 10, 5, dtype="timedelta64[m]").astype(
+        "timedelta64[s]"
+    )
+    amount_expected = np.array([0, 1, 2, 1, 0]).astype(float)
+    amount_expected *= 17 / amount_expected.sum()
+
+    assert date_expected.dtype == td.date.dtype
+    assert np.allclose(td.date.astype(int), date_expected.astype(int))
+    assert np.allclose(td.amount, amount_expected)
+
+
+def test_easy_timedelta_distribution_triangular_custom_mode():
+    td = easy_timedelta_distribution(
+        start=-10,
+        end=10,
+        total=17,
+        resolution="m",
+        steps=5,
+        param=0.2,
+        kind="triangular",
+    )
+    date_expected = np.linspace(-10, 10, 5, dtype="timedelta64[m]").astype(
+        "timedelta64[s]"
+    )
+    amount_expected = np.array([0.0, 1.875, 1.25, 0.625, 0.0]).astype(float)
+    amount_expected *= 17 / amount_expected.sum()
+
+    assert date_expected.dtype == td.date.dtype
+    assert np.allclose(td.date.astype(int), date_expected.astype(int))
+    assert np.allclose(td.amount, amount_expected)
+
+
+def test_easy_timedelta_distribution_normal():
+    td = easy_timedelta_distribution(
+        start=-10, end=10, total=17, resolution="m", steps=5, param=0.2, kind="normal"
+    )
+    date_expected = np.linspace(-10, 10, 5, dtype="timedelta64[m]").astype(
+        "timedelta64[s]"
+    )
+    amount_expected = np.array(
+        [0.37280396, 3.8847065, 8.48497908, 3.8847065, 0.37280396]
+    ).astype(float)
+    amount_expected *= 17 / amount_expected.sum()
+
+    assert date_expected.dtype == td.date.dtype
+    assert np.allclose(td.date.astype(int), date_expected.astype(int))
+    assert np.allclose(td.amount, amount_expected)

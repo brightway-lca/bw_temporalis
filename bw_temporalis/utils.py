@@ -25,17 +25,25 @@ def normalized_data_array(
     if kind == "uniform":
         return np.ones(steps)
     elif kind == "triangular":
-        # Zero probability at bounds
+        # Zero probability at bounds, so add sacrificial bounds
+        try:
+            c = float(param) if param is not None else 0.5
+        except ValueError:
+            raise ValueError(
+                f"Couldn't convert triangular mode parameter `c` '{param}' to number"
+            )
+        if not 0 <= c <= 1:
+            raise ValueError(f"`c` must be in (0, 1); got {c}")
         return triang.pdf(
-            np.linspace(1 / (steps * 2), 1 - 1 / (steps * 2), steps),
-            float(param) if param is not None else 0.5,
+            np.linspace(0, 1, steps),
+            c=c,
         )
     elif kind == "normal":
         if not (isinstance(param, Number) and param > 0):
             raise ValueError(
                 "Numerical standard deviation (`param`) greater than zero required for Normal distribution"
             )
-        return norm.pdf(np.linspace(-0.5, 0.5, steps), param)
+        return norm.pdf(np.linspace(-0.5, 0.5, steps), scale=param)
     else:
         raise ValueError(f"Unrecognized array kind {kind}")
 
@@ -50,11 +58,19 @@ def easy_datetime_distribution(
 ) -> TemporalDistribution:
     """Generate a datetime `TemporalDistribution` with a few input parameters.
 
-    Can generate distributions whose `amount` values are uniformly, triangularly, or normally distributed. Please build more complicated distributions manually.
+    Can generate distributions whose `amount` values are uniformly,
+    triangularly, or normally distributed. Please build more complicated
+    distributions manually.
 
-    Only the `amount` values are distributed, the resulting distribution `date` values are uniformly spaced from `start` to `end`.
+    Only the `amount` values are distributed, the resulting distribution
+    `date` values are uniformly spaced from `start` to `end`.
 
-    For triangular distributions, `param` is the mode (optional). For lognormal distributions, `param` is the standard deviation (required). `param` is not used for the uniform distribution.
+    For triangular distributions, `param` is the mode (optional). The `param`
+    value should be in the same format as `start` and `end`, e.g.
+    "2023-01-01".
+
+    For lognormal distributions, `param` is the standard deviation in relation
+    to a standardized distribution with mu = 0. `param` is not used for the uniform distribution.
 
     Raises
     ------
@@ -136,7 +152,7 @@ def easy_timedelta_distribution(
     end : int
         End (inclusive) of the distribution in `resolution` units
     resolution : str
-        Resolution of the created `timedelta64` array. One of `Y` (year), `M` (month), `D` (day), `H` (hour), `s` (second)
+        Resolution of the created `timedelta64` array. One of `Y` (year), `M` (month), `D` (day), `h` (hour), `m` (minute), `s` (second)
     total : float
         Total amount of the distribution, i.e. value of `amount.sum()`.
     steps : int, optional
@@ -158,7 +174,7 @@ def easy_timedelta_distribution(
         raise ValueError(
             f"`steps` must be a positive number greater than one; got {steps}"
         )
-    if resolution not in "YMDHs":
+    if resolution not in "YMDhms":
         raise ValueError(f"Invalid temporal resolution {resolution}")
     if start >= end:
         raise ValueError(f"Start value is later than end: {start}, {end}")
