@@ -3,6 +3,7 @@ from typing import Any, SupportsFloat, Union
 
 import numpy as np
 import numpy.typing as npt
+from scipy.cluster.vq import kmeans2
 
 from .convolution import (
     consolidate,
@@ -171,3 +172,44 @@ class TemporalDistribution:
         plt.xticks(rotation=30)
 
         return axis
+
+    def simplify(
+        self, threshhold: int | None = 100, iterations: int | None = 30
+    ) -> "TemporalDistribution":
+        """Use clustering to simplify a `TemporalDistribution` with more than
+        `threshhold` number of points.
+
+        Uses the `kmeans2` implementation of KNN from
+        [scipy.cluster.vq](https://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.vq.kmeans2.html).
+        Subclass and override this method to get a custom clustering algorithm.
+
+        This isn't perfect, `kmeans2` produces "lumpy" distributions - to see
+        this graph the simplification of a uniform distribution with many
+        points.
+
+        Parameters
+        ----------
+
+        threshhold : int, optional
+            The number of `date` points above which simplification is triggered
+        iterations : int, optional
+            `iter` parameters to feed to `kmeans2`
+
+        Returns
+        -------
+
+        Either `self` (if no simplification) or a new instance of `TemporalDistribution`.
+
+        """
+        if len(self) <= threshhold:
+            return self
+
+        means, codebook = kmeans2(
+            data=self.date.astype(float), iter=iterations, k=threshhold, minit="points"
+        )
+        _, amount = consolidate(indices=codebook, amounts=self.amount)
+        # Clusters can be "lumpy", even with smooth input date
+        # Chances are that less than `threshhold` clusters are generated
+        # so we need to remove unused clusters.
+        date = np.sort(means[np.unique(codebook)]).astype(self.date.dtype)
+        return TemporalDistribution(date=date, amount=amount)

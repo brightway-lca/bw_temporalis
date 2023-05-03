@@ -7,11 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.5] - XXX
+## [0.5] - 2023-05-03
 
 * New convolution implementation improves speed and removes dependency on `bw2speedups`
 * Fix [#1](https://github.com/brightway-lca/bw_temporalis/issues/1) - Add utility function to check if temporal distributions sum to amount values
 * Fix [#6](https://github.com/brightway-lca/bw_temporalis/issues/6) - Better error message for to_dataframe when timeline is empty
+* Fix [#8](https://github.com/brightway-lca/bw_temporalis/issues/8) - Add clustering for to reduce complexity of large `TemporalDistributions` after convolution
+* Fix [#9](https://github.com/brightway-lca/bw_temporalis/issues/9) - Add utility function to generate temporal distributions
+* Fix [#12](https://github.com/brightway-lca/bw_temporalis/issues/12) - Add utility function to visualize temporal distributions
 
 ## [0.4] - 2023-04-29
 

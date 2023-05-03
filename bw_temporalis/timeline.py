@@ -70,6 +70,9 @@ class Timeline:
             FlowTD(distribution=td.nonzero(), flow=flow, activity=activity)
         )
 
+    def __len__(self):
+        return len(self.date)
+
     def build_dataframe(self) -> None:
         """
         Build a Pandas DataFrame from the Timeline.data object and store it as a Timeline.pd object.

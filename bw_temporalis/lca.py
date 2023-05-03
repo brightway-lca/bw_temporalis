@@ -143,7 +143,7 @@ class TemporalisLCA:
                         or exchange.data["amount"]
                     )
                     timeline.add_flow_temporal_distribution(
-                        td=td * value,
+                        td=(td * value).simplify(),
                         flow=flow.flow_datapackage_id,
                         activity=node.activity_datapackage_id,
                     )
@@ -162,7 +162,7 @@ class TemporalisLCA:
                     heap,
                     (
                         1 / node.cumulative_score,
-                        td * value,
+                        (td * value).simplify(),
                         producer,
                     ),
                 )
@@ -193,12 +193,16 @@ class TemporalisLCA:
             yield from exchanges
 
     def get_technosphere_exchange(self, input_id: int, output_id: int) -> ED:
+        def printer(x):
+            return "{}|{}|{}".format(x.database, x.name, x.code)
+
         exchanges = self._exchange_iterator(input_id, output_id)
         if len(exchanges) > 1:
-            _ = lambda x: "{}|{}|{}".format(x.database, x.name, x.code)
             raise MultipleTechnosphereExchanges(
                 "Found {} exchanges for link between {} and {}".format(
-                    len(exchanges), _(inp), _(outp)
+                    len(exchanges),
+                    printer(exchanges[0].input),
+                    printer(exchanges[0].output),
                 )
             )
         return exchanges[0]

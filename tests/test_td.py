@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from bw_temporalis import easy_datetime_distribution, easy_timedelta_distribution
 from bw_temporalis.temporal_distribution import TemporalDistribution as TD
 
 
@@ -153,3 +154,32 @@ def test_str(simple):
 
 def test_repr(simple):
     assert repr(simple)
+
+
+def test_simplify_timedelta():
+    td = easy_timedelta_distribution(
+        start=0, end=500, total=1000, steps=250, resolution="D"
+    ).simplify()
+    assert td.date.dtype == np.dtype("timedelta64[s]")
+    assert td.amount.sum() == 1000
+    assert len(td) <= 100
+    assert td.date.min() >= np.array(0, dtype="timedelta64[D]")
+    assert td.date.max() <= np.array(500, dtype="timedelta64[D]")
+
+
+def test_simplify_timedelta_skip():
+    td = easy_timedelta_distribution(
+        start=0, end=500, total=1000, steps=25, resolution="D"
+    ).simplify()
+    assert td.simplify() is td
+
+
+def test_simplify_datetime():
+    td = easy_datetime_distribution(
+        start="2023-01-01", end="2023-12-31", total=1000, steps=250
+    ).simplify()
+    assert td.date.dtype == np.dtype("datetime64[s]")
+    assert td.amount.sum() == 1000
+    assert len(td) <= 100
+    assert td.date.min() >= np.array("2023-01-01", dtype="datetime64[s]")
+    assert td.date.max() <= np.array("2023-12-31", dtype="datetime64[s]")
