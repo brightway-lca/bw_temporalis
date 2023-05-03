@@ -174,7 +174,10 @@ class TemporalDistribution:
         return axis
 
     def simplify(
-        self, threshhold: int | None = 100, iterations: int | None = 30
+        self,
+        threshhold: int | None = 100,
+        num_clusters: int | None = None,
+        iterations: int | None = 30,
     ) -> "TemporalDistribution":
         """Use clustering to simplify a `TemporalDistribution` with more than
         `threshhold` number of points.
@@ -204,8 +207,13 @@ class TemporalDistribution:
         if len(self) <= threshhold:
             return self
 
+        num_clusters = num_clusters or threshhold
+
         means, codebook = kmeans2(
-            data=self.date.astype(float), iter=iterations, k=threshhold, minit="points"
+            data=self.date.astype(float),
+            iter=iterations,
+            k=num_clusters,
+            minit="points",
         )
         _, amount = consolidate(indices=codebook, amounts=self.amount)
         # Clusters can be "lumpy", even with smooth input date

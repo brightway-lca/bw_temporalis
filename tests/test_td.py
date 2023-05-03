@@ -167,6 +167,17 @@ def test_simplify_timedelta():
     assert td.date.max() <= np.array(500, dtype="timedelta64[D]")
 
 
+def test_simplify_timedelta_num_clusters():
+    td = easy_timedelta_distribution(
+        start=0, end=500, total=1000, steps=250, resolution="D"
+    ).simplify(num_clusters=25)
+    assert td.date.dtype == np.dtype("timedelta64[s]")
+    assert td.amount.sum() == 1000
+    assert len(td) <= 25
+    assert td.date.min() >= np.array(0, dtype="timedelta64[D]")
+    assert td.date.max() <= np.array(500, dtype="timedelta64[D]")
+
+
 def test_simplify_timedelta_skip():
     td = easy_timedelta_distribution(
         start=0, end=500, total=1000, steps=25, resolution="D"
