@@ -87,6 +87,17 @@ def test_mul_number_dt(simple):
     assert np.allclose(a.amount, np.ones(5) * 5)
 
 
+def test_nonzero():
+    td = TD(
+        np.array([0, 0, 1, 1, 2], dtype="timedelta64[D]"), np.array([0, 0, 1, 2, 3])
+    ).nonzero()
+    assert np.array_equal(td.amount, np.array([1, 2, 3]))
+    assert np.array_equal(
+        td.date,
+        np.array([1, 1, 2], dtype="timedelta64[D]"),
+    )
+
+
 def test_add_error_two_datetime(simple):
     a = TD(np.arange(0, 5, dtype="datetime64[D]"), np.ones(5) * 2)
     b = TD(np.arange(0, 5, dtype="datetime64[D]"), np.ones(5) * 2)

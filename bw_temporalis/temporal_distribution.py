@@ -173,6 +173,13 @@ class TemporalDistribution:
 
         return axis
 
+    def nonzero(self):
+        mask = self.amount == 0
+        if mask.sum():
+            return TemporalDistribution(self.date[~mask], self.amount[~mask])
+        else:
+            return self
+
     def simplify(
         self,
         threshhold: int | None = 100,
