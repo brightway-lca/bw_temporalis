@@ -8,7 +8,7 @@ import numpy as np
 from bw2calc import LCA
 from bw2data.backends import ActivityDataset as AD
 from bw2data.backends import ExchangeDataset as ED
-from bw_graph_tools import GraphTraversal
+from bw_graph_tools import NewNodeEachVisitGraphTraversal
 
 from .temporal_distribution import TemporalDistribution as TD
 from .timeline import Timeline
@@ -61,8 +61,8 @@ class TemporalisLCA:
         Should we also traverse edges for the other products in multioutput activities?
     functional_unit_unique_id : int
         The unique id of the functional unit. Strongly recommended to leave as default.
-    graph_traversal : bw_graph_tools.GraphTraversal
-        Optional subclass of `GraphTraversal` for advanced usage
+    graph_traversal : bw_graph_tools.NewNodeEachVisitGraphTraversal
+        Optional subclass of `NewNodeEachVisitGraphTraversal` for advanced usage
 
     """
 
@@ -76,7 +76,8 @@ class TemporalisLCA:
         static_activity_indices: set[int] | None = set(),
         skip_coproducts: bool | None = False,
         functional_unit_unique_id: int | None = -1,
-        graph_traversal: GraphTraversal | None = GraphTraversal,
+        graph_traversal: NewNodeEachVisitGraphTraversal
+        | None = NewNodeEachVisitGraphTraversal,
     ):
         self.lca_object = lca_object
         self.unique_id = functional_unit_unique_id
@@ -106,23 +107,25 @@ class TemporalisLCA:
         )
         print("Calculation count:", gt["calculation_count"])
         self.nodes = gt["nodes"]
-
         self.edges = gt["edges"]
         self.edge_mapping = defaultdict(list)
         for edge in self.edges:
-            self.edge_mapping[edge.consumer_id].append(edge)
+            self.edge_mapping[edge.consumer_unique_id].append(edge)
 
         self.flows = gt["flows"]
         self.flow_mapping = defaultdict(list)
         for flow in self.flows:
             self.flow_mapping[flow.activity_unique_id].append(flow)
 
+        print(self.edges)
+        print(self.nodes)
+
     def build_timeline(self) -> Timeline:
         heap = []
         timeline = Timeline()
 
         for edge in self.edge_mapping[self.unique_id]:
-            node = self.nodes[edge.producer_id]
+            node = self.nodes[edge.producer_unique_id]
             heappush(
                 heap,
                 (
@@ -138,10 +141,7 @@ class TemporalisLCA:
                 for exchange in self.get_biosphere_exchanges(
                     flow.flow_datapackage_id, node.activity_datapackage_id
                 ):
-                    value = (
-                        exchange.data.get("temporal_distribution")
-                        or exchange.data["amount"]
-                    )
+                    value = self._exchange_value(exchange)
                     timeline.add_flow_temporal_distribution(
                         td=(td * value).simplify(),
                         flow=flow.flow_datapackage_id,
@@ -150,14 +150,16 @@ class TemporalisLCA:
 
             for edge in self.edge_mapping[node.unique_id]:
                 exchange = self.get_technosphere_exchange(
-                    input_id=self.nodes[edge.producer_id].activity_datapackage_id,
+                    input_id=self.nodes[
+                        edge.producer_unique_id
+                    ].activity_datapackage_id,
                     output_id=node.activity_datapackage_id,
                 )
                 value = (
-                    exchange.data.get("temporal_distribution")
-                    or exchange.data["amount"]
-                ) / node.reference_product_production_amount
-                producer = self.nodes[edge.producer_id]
+                    self._exchange_value(exchange)
+                    / node.reference_product_production_amount
+                )
+                producer = self.nodes[edge.producer_unique_id]
                 heappush(
                     heap,
                     (
@@ -167,6 +169,13 @@ class TemporalisLCA:
                     ),
                 )
         return timeline
+
+    def _exchange_value(self, exchange):
+        td = exchange.data.get("temporal_distribution")
+        if td is None:
+            return exchange.data["amount"]
+        else:
+            return td * exchange.data["amount"]
 
     def _exchange_iterator(self, input_id: int, output_id: int) -> list[ED]:
         inp = AD.get(AD.id == input_id)
@@ -186,8 +195,6 @@ class TemporalisLCA:
             total = sum(exc.data["amount"] for exc in exchanges)
             for exc in exchanges:
                 exc.data["amount"] /= total
-                if "temporal_distribution" in exc.data:
-                    exc.data["temporal_distribution"] /= total
                 yield exc
         else:
             yield from exchanges
