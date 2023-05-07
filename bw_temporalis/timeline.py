@@ -117,6 +117,7 @@ class Timeline:
         )
         self.df.sort_values(by="date", ascending=True, inplace=True)
         self.df.reset_index(drop=True, inplace=True)
+        return self.df
 
     def characterize_dataframe(
         self,
