@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 
 from bw_temporalis.temporal_distribution import TemporalDistribution
-from bw_temporalis.timeline import EmptyTimeline, FlowTD, Timeline
+from bw_temporalis.timeline import EmptyTimeline, Timeline
 
 
 def test_empty_timeline_build_dataframe_missing():

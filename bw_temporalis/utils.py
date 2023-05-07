@@ -51,7 +51,6 @@ def normalized_data_array(
 def easy_datetime_distribution(
     start: str,
     end: str,
-    total: float,
     steps: int | None = 50,
     kind: str | None = "uniform",
     param: float | None = None,
@@ -84,8 +83,6 @@ def easy_datetime_distribution(
         Datetime marking the start (inclusive) of the distribution, e.g. "now", "2023-02-01", "2023-03-02T12:34:56"
     end : str
         Datetime marking the end (inclusive) of the distribution, e.g. "now", "2023-02-01", "2023-03-02T12:34:56"
-    total : float
-        Total amount of the distribution, i.e. value of `amount.sum()`.
     steps : int, optional
         Number of values in discrete distribution. Normally not more than 50 or 100.
     kind : str, optional
@@ -99,8 +96,6 @@ def easy_datetime_distribution(
 
     """
     # Check carefully as new users will do interesting things
-    if not np.isreal(total):
-        raise ValueError(f"Invalid `total` value {total}")
     if not isinstance(steps, int) or not steps > 1:
         raise ValueError(
             f"`steps` must be a positive number greater than one; got {steps}"
@@ -128,7 +123,7 @@ def easy_datetime_distribution(
     amount, date = amount[mask], date[mask]
 
     # Normalize after removing possible NaN/Inf
-    amount *= total / amount.sum()
+    amount *= 1 / amount.sum()
     return TemporalDistribution(date=date, amount=amount)
 
 
@@ -136,7 +131,6 @@ def easy_timedelta_distribution(
     start: int,
     end: int,
     resolution: str,
-    total: float,
     steps: int | None = 50,
     kind: str | None = "uniform",
     param: float | None = None,
@@ -162,8 +156,6 @@ def easy_timedelta_distribution(
         End (inclusive) of the distribution in `resolution` units
     resolution : str
         Resolution of the created `timedelta64` array. One of `Y` (year), `M` (month), `D` (day), `h` (hour), `m` (minute), `s` (second)
-    total : float
-        Total amount of the distribution, i.e. value of `amount.sum()`.
     steps : int, optional
         Number of values in discrete distribution. Normally not more than 50 or 100.
     kind : str, optional
@@ -177,8 +169,6 @@ def easy_timedelta_distribution(
 
     """
     # Check carefully as new users will do interesting things
-    if not np.isreal(total):
-        raise ValueError(f"Invalid `total` value {total}")
     if not isinstance(steps, int) or not steps > 1:
         raise ValueError(
             f"`steps` must be a positive number greater than one; got {steps}"
@@ -202,7 +192,7 @@ def easy_timedelta_distribution(
     amount, date = amount[mask], date[mask]
 
     # Normalize after removing possible NaN/Inf
-    amount *= total / amount.sum()
+    amount *= 1 / amount.sum()
     return TemporalDistribution(date=date, amount=amount)
 
 
@@ -221,7 +211,7 @@ def check_database_exchanges(database_label: str) -> None:
 
     """
     MESSAGE = """
-    Temporal distribution in exchange differs from `amount`:
+    Temporal distribution in exchange doesn't sum to one:
     Input:
         {inp}
         id: {inp_id}
@@ -229,7 +219,7 @@ def check_database_exchanges(database_label: str) -> None:
         {outp}
         id: {outp_id}
     Exchange amount: {exc_amount:.4e}
-    Temporal distribution amount: {td_amount:.4e}
+    Temporal distribution sum: {td_amount:.4e}
     """
     for ds in tqdm(bd.Database(database_label)):
         for exc in ds.exchanges():
@@ -237,7 +227,7 @@ def check_database_exchanges(database_label: str) -> None:
             # responsible for summing to the exchange amount on their own.
             if isinstance(exc.get("temporal_distribution"), TemporalDistribution):
                 a, b = exc["amount"], exc["temporal_distribution"].amount.sum()
-                if not math.isclose(a, b, rel_tol=0.01):
+                if not math.isclose(1, b, rel_tol=0.01):
                     raise IncongruentDistribution(
                         MESSAGE.format(
                             inp=exc.input,
