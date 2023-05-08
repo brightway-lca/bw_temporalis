@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6] - 2023-05-08
+
+* Fix [#15](https://github.com/brightway-lca/bw_temporalis/issues/15) - Switch `temporal_distribution` to have `amount` sum to one
+* Fixes for [bw_graph_tools](https://github.com/brightway-lca/bw_graph_tools) version 0.2.2
+* Lowered default cutoff values in graph traversal
+
 ## [0.5] - 2023-05-03
 
 * New convolution implementation improves speed and removes dependency on `bw2speedups`
