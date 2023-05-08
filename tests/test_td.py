@@ -33,9 +33,6 @@ def test_mul_td(simple):
 
     multiplied = simple * td2
 
-    print(multiplied.date)
-    print(multiplied.amount)
-
     assert np.array_equal(
         np.arange(-1, 6, dtype="timedelta64[D]"),
         multiplied.date,

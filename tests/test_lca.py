@@ -28,7 +28,7 @@ def basic_db():
                     {
                         "amount": 5,
                         "input": ("db", "B"),
-                        "temporal distribution": easy_timedelta_distribution(
+                        "temporal_distribution": easy_timedelta_distribution(
                             0, 4, resolution="Y", steps=5
                         ),
                         "type": "technosphere",
@@ -43,7 +43,7 @@ def basic_db():
                         "amount": 8,
                         "input": ("db", "CO2"),
                         "type": "biosphere",
-                        "temporal distribution": easy_timedelta_distribution(
+                        "temporal_distribution": easy_timedelta_distribution(
                             10, 17, steps=4, resolution="Y"
                         ),
                     },
@@ -57,7 +57,7 @@ def basic_db():
                         "amount": 2,
                         "input": ("db", "CO2"),
                         "type": "biosphere",
-                        "temporal distribution": easy_timedelta_distribution(
+                        "temporal_distribution": easy_timedelta_distribution(
                             -8, -5, steps=4, resolution="Y"
                         ),
                     },

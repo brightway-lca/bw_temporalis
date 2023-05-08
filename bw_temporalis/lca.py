@@ -76,8 +76,9 @@ class TemporalisLCA:
         static_activity_indices: set[int] | None = set(),
         skip_coproducts: bool | None = False,
         functional_unit_unique_id: int | None = -1,
-        graph_traversal: NewNodeEachVisitGraphTraversal
-        | None = NewNodeEachVisitGraphTraversal,
+        graph_traversal: (
+            NewNodeEachVisitGraphTraversal | None
+        ) = NewNodeEachVisitGraphTraversal,
     ):
         self.lca_object = lca_object
         self.unique_id = functional_unit_unique_id
@@ -116,9 +117,6 @@ class TemporalisLCA:
         self.flow_mapping = defaultdict(list)
         for flow in self.flows:
             self.flow_mapping[flow.activity_unique_id].append(flow)
-
-        print(self.edges)
-        print(self.nodes)
 
     def build_timeline(self) -> Timeline:
         heap = []
