@@ -27,6 +27,10 @@ You can install _bw_temporalis_ via [pip] from [PyPI]:
 $ pip install bw_temporalis
 ```
 
+Currently Python 3.11 installations are broken as [scikit-network](https://scikit-network.readthedocs.io/en/latest/?badge=latest) doesn't have pre-built wheels and compilation fails. This [could be fixed soon](https://github.com/sknetwork-team/scikit-network/pull/558).
+
+You can also install using conda in the [cmutel channel](https://anaconda.org/cmutel/bw_temporalis).
+
 ## Contributing
 
 Contributions are very welcome.
