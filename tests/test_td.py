@@ -166,18 +166,18 @@ def test_repr(simple):
 
 def test_simplify_timedelta():
     td = easy_timedelta_distribution(
-        start=0, end=500, steps=250, resolution="D"
+        start=0, end=500, steps=1500, resolution="D"
     ).simplify()
     assert td.date.dtype == np.dtype("timedelta64[s]")
     assert np.allclose(td.amount.sum(), 1)
-    assert len(td) <= 100
+    assert len(td) <= 1000
     assert td.date.min() >= np.array(0, dtype="timedelta64[D]")
     assert td.date.max() <= np.array(500, dtype="timedelta64[D]")
 
 
 def test_simplify_timedelta_num_clusters():
     td = easy_timedelta_distribution(
-        start=0, end=500, steps=250, resolution="D"
+        start=0, end=500, steps=1250, resolution="D"
     ).simplify(num_clusters=25)
     assert td.date.dtype == np.dtype("timedelta64[s]")
     assert np.allclose(td.amount.sum(), 1)
@@ -195,10 +195,10 @@ def test_simplify_timedelta_skip():
 
 def test_simplify_datetime():
     td = easy_datetime_distribution(
-        start="2023-01-01", end="2023-12-31", steps=250
+        start="2023-01-01", end="2023-12-31", steps=1500
     ).simplify()
     assert td.date.dtype == np.dtype("datetime64[s]")
     assert np.allclose(td.amount.sum(), 1)
-    assert len(td) <= 100
+    assert len(td) <= 1000
     assert td.date.min() >= np.array("2023-01-01", dtype="datetime64[s]")
     assert td.date.max() <= np.array("2023-12-31", dtype="datetime64[s]")

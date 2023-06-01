@@ -1,3 +1,4 @@
+import json
 from numbers import Number
 from typing import Any, SupportsFloat, Union
 
@@ -173,6 +174,24 @@ class TemporalDistribution:
 
         return axis
 
+    def to_json(self):
+        return json.dumps(
+            {
+                "__loader__": "bw_temporalis.temporal_distribution.TemporalDistribution",
+                "date_dtype": str(self.date.dtype),
+                "date": self.date.astype(int).tolist(),
+                "amount": self.amount.tolist(),
+            }
+        )
+
+    @classmethod
+    def from_json(cls, json_string):
+        data = json.loads(json_string)
+        return cls(
+            date=np.array(data["date"], dtype=data["date_dtype"]),
+            amount=np.array(data["amount"], dtype=float),
+        )
+
     def nonzero(self):
         mask = self.amount == 0
         if mask.sum():
@@ -182,7 +201,7 @@ class TemporalDistribution:
 
     def simplify(
         self,
-        threshhold: int | None = 100,
+        threshhold: int | None = 1000,
         num_clusters: int | None = None,
         iterations: int | None = 30,
     ) -> "TemporalDistribution":
