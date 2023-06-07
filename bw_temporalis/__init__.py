@@ -4,6 +4,7 @@ __all__ = (
     "easy_datetime_distribution",
     "easy_timedelta_distribution",
     "FixedTimeOfYear",
+    "FixedTD",
     "IncongruentDistribution",
     "loader_registry",
     "supplement_dataframe",
@@ -26,7 +27,7 @@ from .utils import (
     get_version_tuple,
     supplement_dataframe,
 )
-from .example_functions import FixedTimeOfYear
+from .example_functions import FixedTimeOfYear, FixedTD
 
 loader_registry = {
     "bw_temporalis.temporal_distribution.TemporalDistribution.from_json": TemporalDistribution.from_json,

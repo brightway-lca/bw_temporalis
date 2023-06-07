@@ -6,7 +6,7 @@ from typing import Optional
 import numpy as np
 
 from . import TDAware
-from .convolution import timedelta_type
+from .convolution import datetime_type, timedelta_type
 from .temporal_distribution import TemporalDistribution
 
 
@@ -29,7 +29,9 @@ class FixedTimeOfYear(TDAware):
             raise ValueError("Can't have negative relative datetime64 values")
         self.allow_overlap = allow_overlap
 
-    def __mul__(self, other: TemporalDistribution) -> TemporalDistribution | TDAware:
+    def __mul__(
+        self, other: TemporalDistribution | Number
+    ) -> TemporalDistribution | TDAware:
         if isinstance(other, Number):
             return FixedTimeOfYear(
                 temporal_distribution=self.td * other, allow_overlap=self.allow_overlap
@@ -77,4 +79,38 @@ class FixedTimeOfYear(TDAware):
         return cls(
             temporal_distribution=TemporalDistribution.from_json(data),
             allow_overlap=data["allow_overlap"],
+        )
+
+
+class FixedTD(TDAware):
+    """An absolute `TemporalDistribution` that ignores other temporal information."""
+
+    def __init__(
+        self,
+        temporal_distribution: TemporalDistribution,
+    ):
+        self.td = temporal_distribution
+        if not self.td.base_time_type == datetime_type:
+            raise ValueError("`temporal_distribution` must be `datetime64`")
+
+    def __mul__(
+        self, other: TemporalDistribution | Number
+    ) -> TemporalDistribution | TDAware:
+        coeff = other if isinstance(other, Number) else other.amount.sum()
+        return FixedTD(temporal_distribution=self.td * coeff)
+
+    def to_json(self) -> str:
+        return json.dumps(
+            {
+                "__loader__": "bw_temporalis.example_functions.FixedTD.from_json",
+                "date_dtype": str(self.td.date.dtype),
+                "date": self.td.date.astype(int).tolist(),
+                "amount": self.td.amount.tolist(),
+            }
+        )
+
+    @classmethod
+    def from_json(cls, json_obj):
+        return cls(
+            temporal_distribution=TemporalDistribution.from_json(json_obj),
         )
