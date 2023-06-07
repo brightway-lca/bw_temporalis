@@ -1,3 +1,4 @@
+import json
 from collections import defaultdict
 from collections.abc import Iterable
 from datetime import datetime
@@ -169,7 +170,24 @@ class TemporalisLCA:
         return timeline
 
     def _exchange_value(self, exchange):
+        from . import loader_registry
+
         td = exchange.data.get("temporal_distribution")
+        if isinstance(td, str) and "__loader__" in td:
+            data = json.loads(td)
+            try:
+                td = loader_registry[td["__loader__"]](data)
+            except KeyError:
+                raise KeyError(
+                    "Can't find correct loader {} in `loader_registry`".format(
+                        td["__loader__"]
+                    )
+                )
+        elif not (isinstance(td, TD) or td is None):
+            raise ValueError(
+                f"Can't understand value for `temporal_distribution` in exchange {exchange}"
+            )
+
         if td is None:
             return exchange.data["amount"]
         else:

@@ -1,4 +1,5 @@
 import json
+from collections.abc import Mapping
 from numbers import Number
 from typing import Any, SupportsFloat, Union
 
@@ -6,6 +7,7 @@ import numpy as np
 import numpy.typing as npt
 from scipy.cluster.vq import kmeans2
 
+from . import TDAware
 from .convolution import (
     consolidate,
     datetime_type,
@@ -70,9 +72,11 @@ class TemporalDistribution:
         return float(self.amount.sum())
 
     def __mul__(
-        self, other: Union["TemporalDistribution", SupportsFloat]
+        self, other: Union["TemporalDistribution", SupportsFloat, TDAware]
     ) -> "TemporalDistribution":
-        if isinstance(other, TemporalDistribution):
+        if isinstance(other, TDAware):
+            return other * self
+        elif isinstance(other, TemporalDistribution):
             if (
                 self.base_time_type == datetime_type
                 and other.base_time_type == datetime_type
@@ -197,7 +201,7 @@ class TemporalDistribution:
     def to_json(self):
         return json.dumps(
             {
-                "__loader__": "bw_temporalis.temporal_distribution.TemporalDistribution",
+                "__loader__": "bw_temporalis.temporal_distribution.TemporalDistribution.from_json",
                 "date_dtype": str(self.date.dtype),
                 "date": self.date.astype(int).tolist(),
                 "amount": self.amount.tolist(),
@@ -205,8 +209,13 @@ class TemporalDistribution:
         )
 
     @classmethod
-    def from_json(cls, json_string):
-        data = json.loads(json_string)
+    def from_json(cls, json_obj: str | Mapping) -> "TemporalDistribution":
+        if isinstance(json_obj, Mapping):
+            data = json_obj
+        elif isinstance(json_obj, str):
+            data = json.loads(json_obj)
+        else:
+            raise ValueError(f"Can't understand `from_json` input object {json_obj}")
         return cls(
             date=np.array(data["date"], dtype=data["date_dtype"]),
             amount=np.array(data["amount"], dtype=float),
