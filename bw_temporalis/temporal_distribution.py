@@ -14,6 +14,16 @@ from .convolution import (
     timedelta_type,
 )
 
+RESOLUTION_LABELS = {
+    "Y": "Years",
+    "M": "Months",
+    "W": "Weeks",
+    "D": "Days",
+    "h": "Hours",
+    "m": "Minutes",
+    "s": "Seconds",
+}
+
 
 class TemporalDistribution:
     """A container for a series of amount spread over time.
@@ -152,8 +162,12 @@ class TemporalDistribution:
     def __repr__(self) -> str:
         return str(self)
 
-    def graph(self, style: str | None = "fivethirtyeight"):
+    def graph(
+        self, style: str | None = "fivethirtyeight", resolution: str | None = None
+    ):
         """Graph the temporal distribution.
+
+        `resolution` is one of `YMWDhms`.
 
         This isn't too difficult, if you need more customization write your own :)"""
         try:
@@ -162,12 +176,18 @@ class TemporalDistribution:
             raise ImportError("`matplotlib` required for this function")
         plt.style.use(style)
         axis = plt.gca()
-        axis.plot(self.date, self.amount, marker=".", lw=0)
 
         if np.issubdtype(self.date.dtype, np.datetime64):
             axis.set_xlabel("Date")
+            date = self.date
         else:
-            axis.set_xlabel("Time (seconds)")
+            if resolution is None:
+                date = self.date
+                axis.set_xlabel("Time (seconds)")
+            else:
+                date = self.date.astype(f"timedelta64[{resolution}]")
+                axis.set_xlabel("Time ({})".format(RESOLUTION_LABELS[resolution]))
+        axis.plot(date, self.amount, marker=".", lw=0)
         axis.set_ylabel("Amount")
         plt.tight_layout()
         plt.xticks(rotation=30)
