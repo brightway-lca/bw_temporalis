@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from bw_temporalis import (
-    FixedTimeOfYear,
+    FixedTimeOfYearTD,
     TemporalDistribution,
     easy_datetime_distribution,
     easy_timedelta_distribution,
@@ -12,16 +12,14 @@ from bw_temporalis import (
 
 
 def test_ftoy_negative_error():
+    td = easy_timedelta_distribution(-10, 10, resolution="D", steps=10)
     with pytest.raises(ValueError):
-        FixedTimeOfYear(easy_timedelta_distribution(-10, 10, resolution="D", steps=10))
+        FixedTimeOfYearTD(td.date, td.amount)
 
 
 def test_ftoy_multiplication_simple():
-    ftoy = FixedTimeOfYear(
-        temporal_distribution=easy_timedelta_distribution(
-            0, 60, resolution="D", steps=4
-        )
-    )
+    td = easy_timedelta_distribution(0, 60, resolution="D", steps=4)
+    ftoy = FixedTimeOfYearTD(td.date, td.amount)
     atd = easy_datetime_distribution(start="2020-02-01", end="2020-08-01", steps=4)
     result = atd * ftoy
     expected = TemporalDistribution(
@@ -47,10 +45,10 @@ def test_ftoy_multiplication_simple():
 
 
 def test_ftoy_multiplication_allow_overlap():
-    ftoy = FixedTimeOfYear(
-        temporal_distribution=easy_timedelta_distribution(
-            0, 60, resolution="D", steps=4
-        ),
+    td = easy_timedelta_distribution(0, 60, resolution="D", steps=4)
+    ftoy = FixedTimeOfYearTD(
+        date=td.date,
+        amount=td.amount,
         allow_overlap=True,
     )
     atd = easy_datetime_distribution(start="2020-02-01", end="2020-08-01", steps=4)
@@ -72,14 +70,11 @@ def test_ftoy_multiplication_allow_overlap():
 
 
 def test_ftoy_serialization():
-    ftoy = FixedTimeOfYear(
-        temporal_distribution=easy_timedelta_distribution(
-            start=0, end=6, steps=4, resolution="h"
-        )
-    )
+    td = easy_timedelta_distribution(start=0, end=6, steps=4, resolution="h")
+    ftoy = FixedTimeOfYearTD(date=td.date, amount=td.amount)
     expected = json.dumps(
         {
-            "__loader__": "bw_temporalis.example_functions.FixedTimeOfYear.from_json",
+            "__loader__": "bw_temporalis.FixedTimeOfYearTD",
             "date_dtype": "timedelta64[s]",
             "date": [0, 60 * 60 * 2, 60 * 60 * 4, 60 * 60 * 6],
             "amount": [0.25, 0.25, 0.25, 0.25],
@@ -90,15 +85,15 @@ def test_ftoy_serialization():
 
 
 def test_ftoy_serialization_overlap():
-    ftoy = FixedTimeOfYear(
-        temporal_distribution=easy_timedelta_distribution(
-            start=0, end=6, steps=4, resolution="h"
-        ),
+    td = easy_timedelta_distribution(start=0, end=6, steps=4, resolution="h")
+    ftoy = FixedTimeOfYearTD(
+        date=td.date,
+        amount=td.amount,
         allow_overlap=True,
     )
     expected = json.dumps(
         {
-            "__loader__": "bw_temporalis.example_functions.FixedTimeOfYear.from_json",
+            "__loader__": "bw_temporalis.FixedTimeOfYearTD",
             "date_dtype": "timedelta64[s]",
             "date": [0, 60 * 60 * 2, 60 * 60 * 4, 60 * 60 * 6],
             "amount": [0.25, 0.25, 0.25, 0.25],
@@ -109,15 +104,15 @@ def test_ftoy_serialization_overlap():
 
 
 def test_ftoy_deserialization_string():
-    reference = FixedTimeOfYear(
-        temporal_distribution=easy_timedelta_distribution(
-            start=0, end=6, steps=4, resolution="h"
-        )
+    td = easy_timedelta_distribution(start=0, end=6, steps=4, resolution="h")
+    reference = FixedTimeOfYearTD(
+        date=td.date,
+        amount=td.amount,
     )
-    given = FixedTimeOfYear.from_json(
+    given = FixedTimeOfYearTD.from_json(
         json.dumps(
             {
-                "__loader__": "bw_temporalis.example_functions.FixedTimeOfYear.from_json",
+                "__loader__": "bw_temporalis.FixedTimeOfYearTD",
                 "date_dtype": "timedelta64[s]",
                 "date": [0, 60 * 60 * 2, 60 * 60 * 4, 60 * 60 * 6],
                 "amount": [0.25, 0.25, 0.25, 0.25],
@@ -125,28 +120,28 @@ def test_ftoy_deserialization_string():
             }
         )
     )
-    assert np.allclose(reference.td.date.astype(int), given.td.date.astype(int))
-    assert np.allclose(reference.td.amount, given.td.amount)
+    assert np.allclose(reference.date.astype(int), given.date.astype(int))
+    assert np.allclose(reference.amount, given.amount)
     assert not given.allow_overlap
-    assert str(given.td.date.dtype) == "timedelta64[s]"
+    assert str(given.date.dtype) == "timedelta64[s]"
 
 
 def test_ftoy_deserialization_dict():
-    reference = FixedTimeOfYear(
-        temporal_distribution=easy_timedelta_distribution(
-            start=0, end=6, steps=4, resolution="h"
-        )
+    td = easy_timedelta_distribution(start=0, end=6, steps=4, resolution="h")
+    reference = FixedTimeOfYearTD(
+        date=td.date,
+        amount=td.amount,
     )
-    given = FixedTimeOfYear.from_json(
+    given = FixedTimeOfYearTD.from_json(
         {
-            "__loader__": "bw_temporalis.example_functions.FixedTimeOfYear.from_json",
+            "__loader__": "bw_temporalis.FixedTimeOfYearTD",
             "date_dtype": "timedelta64[s]",
             "date": [0, 60 * 60 * 2, 60 * 60 * 4, 60 * 60 * 6],
             "amount": [0.25, 0.25, 0.25, 0.25],
             "allow_overlap": False,
         }
     )
-    assert np.allclose(reference.td.date.astype(int), given.td.date.astype(int))
-    assert np.allclose(reference.td.amount, given.td.amount)
+    assert np.allclose(reference.date.astype(int), given.date.astype(int))
+    assert np.allclose(reference.amount, given.amount)
     assert not given.allow_overlap
-    assert str(given.td.date.dtype) == "timedelta64[s]"
+    assert str(given.date.dtype) == "timedelta64[s]"

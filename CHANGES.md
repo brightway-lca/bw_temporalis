@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+* Add `FixedTimeOfYear` example dynamic function.
+* Add ability to serialize and deserialize temporal distributions and dynamic distribution functions.
+Fixes [#10](https://github.com/brightway-lca/bw_temporalis/issues/10).
+
 ## [0.6] - 2023-05-08
 
 * Fix [#15](https://github.com/brightway-lca/bw_temporalis/issues/15) - Switch `temporal_distribution` to have `amount` sum to one

@@ -11,7 +11,7 @@ def test_serialization_absolute_easy():
     td = easy_datetime_distribution(start="2023-01-01", end="2023-01-04", steps=4)
     expected = json.dumps(
         {
-            "__loader__": "bw_temporalis.temporal_distribution.TemporalDistribution.from_json",
+            "__loader__": "bw_temporalis.TemporalDistribution",
             "date_dtype": "datetime64[s]",
             "date": [1672531200, 1672617600, 1672704000, 1672790400],
             "amount": [0.25, 0.25, 0.25, 0.25],
@@ -30,7 +30,7 @@ def test_serialization_absolute():
     )
     expected = json.dumps(
         {
-            "__loader__": "bw_temporalis.temporal_distribution.TemporalDistribution.from_json",
+            "__loader__": "bw_temporalis.TemporalDistribution",
             "date_dtype": "datetime64[s]",
             "date": [1672531200, 1672617600, 1672704000, 1672790400],
             "amount": [1.1, 2.0, 3.0, 4.4],
@@ -43,7 +43,7 @@ def test_serialization_relative_easy():
     td = easy_timedelta_distribution(start=0, end=6, steps=4, resolution="h")
     expected = json.dumps(
         {
-            "__loader__": "bw_temporalis.temporal_distribution.TemporalDistribution.from_json",
+            "__loader__": "bw_temporalis.TemporalDistribution",
             "date_dtype": "timedelta64[s]",
             "date": [0, 60 * 60 * 2, 60 * 60 * 4, 60 * 60 * 6],
             "amount": [0.25, 0.25, 0.25, 0.25],
@@ -59,7 +59,7 @@ def test_serialization_relative():
     )
     expected = json.dumps(
         {
-            "__loader__": "bw_temporalis.temporal_distribution.TemporalDistribution.from_json",
+            "__loader__": "bw_temporalis.TemporalDistribution",
             "date_dtype": "timedelta64[s]",
             "date": [0, 60 * 60 * 2, 60 * 60 * 4, 60 * 60 * 6],
             "amount": [1.1, 2.0, 3.0, 4.4],
@@ -75,7 +75,7 @@ def test_deserialization_absolute():
     given = TD.from_json(
         json.dumps(
             {
-                "__loader__": "bw_temporalis.temporal_distribution.TemporalDistribution.from_json",
+                "__loader__": "bw_temporalis.TemporalDistribution",
                 "date_dtype": "datetime64[s]",
                 "date": [1672531200, 1672617600, 1672704000, 1672790400],
                 "amount": [0.25, 0.25, 0.25, 0.25],
@@ -92,7 +92,7 @@ def test_deserialization_relative():
     given = TD.from_json(
         json.dumps(
             {
-                "__loader__": "bw_temporalis.temporal_distribution.TemporalDistribution.from_json",
+                "__loader__": "bw_temporalis.TemporalDistribution",
                 "date_dtype": "timedelta64[s]",
                 "date": [0, 60 * 60 * 2, 60 * 60 * 4, 60 * 60 * 6],
                 "amount": [0.25, 0.25, 0.25, 0.25],
@@ -108,7 +108,7 @@ def test_deserialization_already_loaded():
     reference = easy_timedelta_distribution(start=0, end=6, steps=4, resolution="h")
     given = TD.from_json(
         {
-            "__loader__": "bw_temporalis.temporal_distribution.TemporalDistribution.from_json",
+            "__loader__": "bw_temporalis.TemporalDistribution",
             "date_dtype": "timedelta64[s]",
             "date": [0, 60 * 60 * 2, 60 * 60 * 4, 60 * 60 * 6],
             "amount": [0.25, 0.25, 0.25, 0.25],
