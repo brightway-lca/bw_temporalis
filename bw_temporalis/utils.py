@@ -69,7 +69,7 @@ def easy_datetime_distribution(
     value should be in the same format as `start` and `end`, e.g.
     "2023-01-01".
 
-    For lognormal distributions, `param` is the standard deviation in relation
+    For normal distributions, `param` is the standard deviation in relation
     to a standardized distribution with mu = 0. `param` is not used for the uniform distribution.
 
     Raises
