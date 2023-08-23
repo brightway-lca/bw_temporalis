@@ -5,11 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.7] - 2023-06-08
 
-* Add `FixedTimeOfYear` example dynamic function.
+* Add `FixedTimeOfYearTD` and `FixedTD` distributions.
+* Add structure for dynamic functions to override temporal distributions. Fixes [#10](https://github.com/brightway-lca/bw_temporalis/issues/10).
 * Add ability to serialize and deserialize temporal distributions and dynamic distribution functions.
-Fixes [#10](https://github.com/brightway-lca/bw_temporalis/issues/10).
 
 ## [0.6] - 2023-05-08
 
