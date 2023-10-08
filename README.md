@@ -27,7 +27,7 @@ You can install _bw_temporalis_ via [pip] from [PyPI]:
 $ pip install bw_temporalis
 ```
 
-Currently Python 3.11 installations are broken as [scikit-network](https://scikit-network.readthedocs.io/en/latest/?badge=latest) doesn't have pre-built wheels and compilation fails. This [could be fixed soon](https://github.com/sknetwork-team/scikit-network/pull/558).
+Currently Python 3.11 installations are broken as [scikit-network](https://scikit-network.readthedocs.io/en/latest/?badge=latest) only has pre-built wheels for version 0.31 - but this changed the [API for shortest path](https://github.com/sknetwork-team/scikit-network/blob/master/HISTORY.rst#0310-2023-05-22), and `bw_graph_tools` has not yet been adapted](https://github.com/brightway-lca/bw_graph_tools/issues/13).
 
 You can also install using conda in the [cmutel channel](https://anaconda.org/cmutel/bw_temporalis).
 
