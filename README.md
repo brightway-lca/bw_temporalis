@@ -31,6 +31,12 @@ Currently Python 3.11 installations are broken as [scikit-network](https://sciki
 
 You can also install using conda in the [cmutel channel](https://anaconda.org/cmutel/bw_temporalis).
 
+## Usage notes
+
+This library uses the *net amount* in the technosphere and biosphere matrix, so caution should be taken in cases where multiple edges with temporal dynamics, especially with different numerical signs, link the same nodes. In general, these edges should be split across multiple processes.
+
+The temporal resolution should not be less than seconds, it will be rounded up to seconds in the `TemporalDistribution`.
+
 ## Contributing
 
 Contributions are very welcome.
