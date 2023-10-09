@@ -287,7 +287,7 @@ class TemporalDistribution(TemporalDistributionBase):
         )
         _, amount = consolidate(indices=codebook, amounts=self.amount)
         # Clusters can be "lumpy", even with smooth input date
-        # Chances are that less than `threshhold` clusters are generated
+        # Chances are that less than `threshold` clusters are generated
         # so we need to remove unused clusters.
         date = np.sort(means[np.unique(codebook)]).astype(self.date.dtype)
         return TemporalDistribution(date=date, amount=amount)
