@@ -181,6 +181,16 @@ def test_easy_datetime_distribution_triangular_invalid_mode():
         )
 
 
+def test_easy_datetime_distribution_triangular_too_few_steps():
+    with pytest.raises(ValueError, match="must have at least three steps"):
+        easy_datetime_distribution(
+            start="2023-01-01",
+            end="2023-01-05",
+            steps=2,
+            kind="triangular",
+        )
+
+
 def test_easy_datetime_distribution_triangular_mode_at_bounds():
     td = easy_datetime_distribution(
         start="2023-01-01",
@@ -361,6 +371,17 @@ def test_easy_timedelta_distribution_triangular_mode_at_bounds():
     assert date_expected.dtype == td.date.dtype
     assert np.allclose(td.date.astype(int), date_expected.astype(int))
     assert np.allclose(td.amount, amount_expected)
+
+
+def test_easy_timedelta_distribution_too_few_steps():
+    with pytest.raises(ValueError, match="must have at least three steps"):
+        easy_timedelta_distribution(
+            start=-10,
+            end=10,
+            resolution="m",
+            steps=2,
+            kind="triangular",
+        )
 
 
 def test_easy_timedelta_distribution_triangular_invalid_mode():

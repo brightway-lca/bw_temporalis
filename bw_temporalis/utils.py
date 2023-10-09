@@ -107,7 +107,9 @@ def easy_datetime_distribution(
     if start >= end:
         raise ValueError(f"Start value is later than end: {start}, {end}")
 
-    if kind == "triangular" and param is not None:
+    if kind == "triangular" and steps < 3:
+        raise ValueError("Triangular distribution must have at least three steps")
+    elif kind == "triangular" and param is not None:
         # Normalize to (0, 1) interval
         param = (np.array(param, dtype="datetime64[s]").astype(int) - start) / (
             end - start
@@ -178,7 +180,9 @@ def easy_timedelta_distribution(
     if start >= end:
         raise ValueError(f"Start value is later than end: {start}, {end}")
 
-    if kind == "triangular" and param is not None:
+    if kind == "triangular" and steps < 3:
+        raise ValueError("Triangular distribution must have at least three steps")
+    elif kind == "triangular" and param is not None:
         # Normalize to (0, 1) interval
         param = (param - start) / (end - start)
         if not 0 <= param <= 1:
