@@ -326,6 +326,11 @@ def test_easy_timedelta_distribution_resolutions():
     f("Y", 60 * 60 * 24 * 365)
 
 
+def test_easy_timedelta_distribution_steps_warning():
+    with pytest.warns(UserWarning, match=r"(20 versus 10)"):
+        easy_timedelta_distribution(start=1, end=10, resolution="m", steps=20)
+
+
 def test_easy_timedelta_distribution_uniform():
     td = easy_timedelta_distribution(start=-10, end=10, resolution="m", steps=21)
     date_expected = np.linspace(-10, 10, 21, dtype="timedelta64[m]").astype(

@@ -1,5 +1,6 @@
 import importlib.metadata
 import math
+import warnings
 from numbers import Number
 from typing import Union
 
@@ -187,6 +188,11 @@ def easy_timedelta_distribution(
         param = (param - start) / (end - start)
         if not 0 <= param <= 1:
             raise ValueError("Triangular mode is outside (start, end) bounds")
+
+    if steps > (end - start + 1):
+        MESSAGE = f"""More steps than discrete possibilities ({steps} versus {end - start + 1}).
+    Values will be duplicated due to rounding."""
+        warnings.warn(MESSAGE)
 
     date = np.array(np.linspace(start, end, steps), dtype=f"timedelta64[{resolution}]")
     amount = normalized_data_array(steps, kind, param)
