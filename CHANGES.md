@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [0.8] - 2023-10-09
+
+* Add `Timeline.add_metadata_to_dataframe` method
+* Removed `utils.supplement_dataframe` function
+
 ### [0.7.2] - 2023-10-09
 
 * Fix [#11](https://github.com/brightway-lca/bw_temporalis/issues/11) - Support uncertainty in graph traversal propagating to temporal distributions

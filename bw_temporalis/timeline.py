@@ -242,10 +242,10 @@ class Timeline:
 
         Parameters
         ----------
-        lca_object : bw2calc.LCA
-            The already instantiated and calculated LCA class (i.e. `.lci()` and `.lcia()` have already been done)
-        starting_datetime : datetime.datetime | str
-            When the functional unit happens. Must be a point in time. Normally something like `"now"` or `"2023-01-01"`.
+        database_labels : list[str]
+            List of all databases to load and add metadata from
+        fields : list[str]
+            Metadata fields to add.
 
         """
         if not hasattr(self, "df"):
