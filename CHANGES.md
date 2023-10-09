@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [0.7.2] - 2023-10-09
+
+* Fix [#11](https://github.com/brightway-lca/bw_temporalis/issues/11) - Support uncertainty in graph traversal propagating to temporal distributions
+
 ### [0.7.1] - 2023-10-09
 
 * Fix [#22](https://github.com/brightway-lca/bw_temporalis/issues/22) - Add a warning when the number of steps is much higher than the possible resolution in `easy` functions
