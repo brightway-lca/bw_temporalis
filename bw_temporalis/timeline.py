@@ -1,6 +1,7 @@
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, List
 
+import bw2data as bd
 import numpy as np
 import pandas as pd
 
@@ -169,6 +170,8 @@ class Timeline:
         - activity: int
 
         """
+        if not hasattr(self, "df"):
+            raise ValueError("Call `.build_dataframe()` first")
         df = self.df.copy()
         if activity:
             df = df.loc[self.df["activity"].isin(activity)]
@@ -215,6 +218,8 @@ class Timeline:
         - flow: int
         - activity: int
         """
+        if not hasattr(self, "df"):
+            raise ValueError("Call `.build_dataframe()` first")
 
         result_df = (
             self.df.groupby([self.df["date"].dt.year])
@@ -225,3 +230,55 @@ class Timeline:
         result_df.rename(columns={"date": "year"})
 
         return result_df
+
+    def add_metadata_to_dataframe(
+        self,
+        df: pd.DataFrame,
+        database_labels: list[str],
+        fields: List[str] = ["name", "unit", "location", "categories"],
+    ) -> pd.DataFrame:
+        """
+        Add additional columns with metadata to the dataframe. Returns a new dataframe.
+
+        Parameters
+        ----------
+        lca_object : bw2calc.LCA
+            The already instantiated and calculated LCA class (i.e. `.lci()` and `.lcia()` have already been done)
+        starting_datetime : datetime.datetime | str
+            When the functional unit happens. Must be a point in time. Normally something like `"now"` or `"2023-01-01"`.
+
+        """
+        if not hasattr(self, "df"):
+            raise ValueError("Call `.build_dataframe()` first")
+
+        db = pd.concat(
+            [bd.Database(label).nodes_to_dataframe() for label in database_labels]
+        )
+        db.drop(
+            axis=1,
+            columns=[label for label in db.columns if label not in ["id"] + fields],
+            inplace=True,
+        )
+        process_db = db.rename(
+            columns={field: "{}_{}".format("activity", field) for field in fields},
+        )
+        df = self.df.merge(
+            process_db, how="left", left_on="activity", right_on="id", validate="m:1"
+        )
+        df.drop(
+            axis=1,
+            columns=["id"],
+            inplace=True,
+        )
+        flow_db = db.rename(
+            columns={field: "{}_{}".format("flow", field) for field in fields},
+        )
+        df = df.merge(
+            flow_db, how="left", left_on="flow", right_on="id", validate="m:1"
+        )
+        df.drop(
+            axis=1,
+            columns=["id"],
+            inplace=True,
+        )
+        return df
