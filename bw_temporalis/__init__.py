@@ -7,7 +7,6 @@ __all__ = (
     "FixedTD",
     "IncongruentDistribution",
     "loader_registry",
-    "supplement_dataframe",
     "TDAware",
     "TemporalDistribution",
     "TemporalisLCA",
@@ -29,7 +28,6 @@ from .utils import (
     easy_datetime_distribution,
     easy_timedelta_distribution,
     get_version_tuple,
-    supplement_dataframe,
 )
 
 loader_registry = {
