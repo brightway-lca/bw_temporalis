@@ -252,3 +252,122 @@ def test_temporalis_lca(basic_db):
     expected_df.reset_index(drop=True, inplace=True)
 
     pd.testing.assert_frame_equal(given_df, expected_df)
+
+
+def test_temporalis_lca_draw_from_matrix(basic_db):
+    lca = LCA({("db", "A"): 2}, ("m",))
+    lca.lci()
+    lca.lcia()
+
+    assert lca.score == 410
+
+    A = bd.get_node(code="A").id
+    B = bd.get_node(code="B").id
+
+    assert lca.technosphere_matrix[lca.dicts.product[B], lca.dicts.activity[A]] == -5
+    lca.technosphere_matrix[lca.dicts.product[B], lca.dicts.activity[A]] = -10
+
+    tlca = TemporalisLCA(
+        lca_object=lca,
+        starting_datetime="2023-01-01",
+    )
+
+    expected_flows = [
+        {
+            "flow_datapackage_id": 2,  # CH4
+            "flow_index": 1,
+            "activity_unique_id": 2,
+            "activity_id": 5,
+            "activity_index": 2,
+            "amount": 20,
+            "score": 500,
+        },
+        {
+            "flow_datapackage_id": 1,
+            "flow_index": 0,
+            "activity_unique_id": 1,
+            "activity_id": 4,
+            "activity_index": 1,
+            "amount": 160,
+            "score": 160,
+        },
+        {
+            "flow_datapackage_id": 1,
+            "flow_index": 0,
+            "activity_unique_id": 3,
+            "activity_id": 6,
+            "activity_index": 3,
+            "amount": 160,
+            "score": 160,
+        },
+    ]
+    expected_flows.sort(key=lambda x: x["score"], reverse=True)
+
+    assert len(tlca.flows) == 3
+    for a, b in zip(tlca.flows, expected_flows):
+        flow_equal_dict(a, b)
+
+    expected_nodes = [
+        {
+            "unique_id": -1,
+            "activity_datapackage_id": -1,
+            "activity_index": -1,
+            "reference_product_datapackage_id": -1,
+            "reference_product_index": -1,
+            "reference_product_production_amount": 1,
+            "supply_amount": 1,
+            "cumulative_score": 410,
+            "direct_emissions_score": 0,
+        },
+        {
+            "unique_id": 0,
+            "activity_datapackage_id": 3,
+            "activity_index": 0,
+            "reference_product_datapackage_id": 3,
+            "reference_product_index": 0,
+            "reference_product_production_amount": 1,
+            "supply_amount": 2,
+            "cumulative_score": 820,
+            "direct_emissions_score": 0,
+        },
+        {
+            "unique_id": 1,
+            "activity_datapackage_id": 4,
+            "activity_index": 1,
+            "reference_product_datapackage_id": 4,
+            "reference_product_index": 1,
+            "reference_product_production_amount": 1,
+            "supply_amount": 20,
+            "cumulative_score": 820,
+            "direct_emissions_score": 160,
+        },
+        {
+            "unique_id": 2,
+            "activity_datapackage_id": 5,
+            "activity_index": 2,
+            "reference_product_datapackage_id": 5,
+            "reference_product_index": 2,
+            "reference_product_production_amount": 1,
+            "supply_amount": 40,
+            "cumulative_score": 500,
+            "direct_emissions_score": 500,
+        },
+        {
+            "unique_id": 3,
+            "activity_datapackage_id": 6,
+            "activity_index": 3,
+            "reference_product_datapackage_id": 6,
+            "reference_product_index": 3,
+            "reference_product_production_amount": 1,
+            "supply_amount": 80,
+            "cumulative_score": 160,
+            "direct_emissions_score": 160,
+        },
+    ]
+
+    import pprint
+
+    for a in expected_nodes:
+        pprint.pprint(tlca.nodes[a["unique_id"]])
+        pprint.pprint(a)
+        node_equal_dict(tlca.nodes[a["unique_id"]], a)
