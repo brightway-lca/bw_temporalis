@@ -3,6 +3,7 @@ from collections import defaultdict
 from collections.abc import Iterable
 from datetime import datetime
 from heapq import heappop, heappush
+from typing import Union
 
 import bw2data as bd
 import numpy as np
@@ -12,6 +13,7 @@ from bw2data.backends import ExchangeDataset as ED
 from bw_graph_tools import NewNodeEachVisitGraphTraversal
 
 from .temporal_distribution import TDAware
+from .temporal_distribution import TemporalDistribution
 from .temporal_distribution import TemporalDistribution as TD
 from .timeline import Timeline
 
@@ -141,7 +143,12 @@ class TemporalisLCA:
                 for exchange in self.get_biosphere_exchanges(
                     flow.flow_datapackage_id, node.activity_datapackage_id
                 ):
-                    value = self._exchange_value(exchange)
+                    value = self._exchange_value(
+                        exchange=exchange,
+                        row_id=flow.flow_datapackage_id,
+                        col_id=node.activity_datapackage_id,
+                        matrix_label="biosphere_matrix",
+                    )
                     timeline.add_flow_temporal_distribution(
                         td=(td * value).simplify(),
                         flow=flow.flow_datapackage_id,
@@ -149,14 +156,19 @@ class TemporalisLCA:
                     )
 
             for edge in self.edge_mapping[node.unique_id]:
+                row_id = self.nodes[edge.producer_unique_id].activity_datapackage_id
+                col_id = node.activity_datapackage_id
                 exchange = self.get_technosphere_exchange(
-                    input_id=self.nodes[
-                        edge.producer_unique_id
-                    ].activity_datapackage_id,
-                    output_id=node.activity_datapackage_id,
+                    input_id=row_id,
+                    output_id=col_id,
                 )
                 value = (
-                    self._exchange_value(exchange)
+                    self._exchange_value(
+                        exchange=exchange,
+                        row_id=row_id,
+                        col_id=col_id,
+                        matrix_label="technosphere_matrix",
+                    )
                     / node.reference_product_production_amount
                 )
                 producer = self.nodes[edge.producer_unique_id]
@@ -170,7 +182,13 @@ class TemporalisLCA:
                 )
         return timeline
 
-    def _exchange_value(self, exchange):
+    def _exchange_value(
+        self,
+        exchange: bd.backends.ExchangeDataset,
+        row_id: int,
+        col_id: int,
+        matrix_label: str,
+    ) -> Union[float, TemporalDistribution]:
         from . import loader_registry
 
         td = exchange.data.get("temporal_distribution")
@@ -189,10 +207,35 @@ class TemporalisLCA:
                 f"Can't understand value for `temporal_distribution` in exchange {exchange}"
             )
 
-        if td is None:
-            return exchange.data["amount"]
+        sign = (
+            1
+            if exchange.data["type"] not in ("generic consumption", "technosphere")
+            else -1
+        )
+
+        if matrix_label == "technosphere_matrix":
+            amount = (
+                sign
+                * self.lca_object.technosphere_matrix[
+                    self.lca_object.dicts.product[row_id],
+                    self.lca_object.dicts.activity[col_id],
+                ]
+            )
+        elif matrix_label == "biosphere_matrix":
+            amount = (
+                exchange.data.get("fraction", 1)
+                * self.lca_object.biosphere_matrix[
+                    self.lca_object.dicts.biosphere[row_id],
+                    self.lca_object.dicts.activity[col_id],
+                ]
+            )
         else:
-            return td * exchange.data["amount"]
+            raise ValueError(f"Unknown matrix type {matrix_label}")
+
+        if td is None:
+            return amount
+        else:
+            return td * amount
 
     def _exchange_iterator(self, input_id: int, output_id: int) -> list[ED]:
         inp = AD.get(AD.id == input_id)
@@ -211,7 +254,7 @@ class TemporalisLCA:
         if len(exchanges) > 1:
             total = sum(exc.data["amount"] for exc in exchanges)
             for exc in exchanges:
-                exc.data["amount"] /= total
+                exc.data["fraction"] = exc.data["amount"] / total
                 yield exc
         else:
             yield from exchanges
