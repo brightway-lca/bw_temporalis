@@ -33,6 +33,8 @@ You can also install using conda in the [cmutel channel](https://anaconda.org/cm
 
 ## Usage notes
 
+See [the teaching repo `from-the-ground-up`](https://github.com/brightway-lca/from-the-ground-up/tree/main/temporal) for examples on how to use this library.
+
 This library uses the *net amount* in the technosphere and biosphere matrix, so caution should be taken in cases where multiple edges with temporal dynamics, especially with different numerical signs, link the same nodes. In general, these edges should be split across multiple processes.
 
 The temporal resolution should not be less than seconds, it will be rounded up to seconds in the `TemporalDistribution`.
