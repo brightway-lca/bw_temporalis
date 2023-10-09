@@ -142,7 +142,7 @@ class TemporalDistribution(TemporalDistributionBase):
                 self.base_time_type == datetime_type
                 and other.base_time_type == datetime_type
             ):
-                raise ValueError("Can't multiple two datetime arrays")
+                raise ValueError("Can't multiply two datetime arrays")
             elif self.base_time_type == datetime_type:
                 date, amount = temporal_convolution_datetime_timedelta(
                     first_date=self.date,
