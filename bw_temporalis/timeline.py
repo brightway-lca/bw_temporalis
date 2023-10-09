@@ -172,6 +172,7 @@ class Timeline:
         """
         if not hasattr(self, "df"):
             raise ValueError("Call `.build_dataframe()` first")
+
         df = self.df.copy()
         if activity:
             df = df.loc[self.df["activity"].isin(activity)]
@@ -233,7 +234,6 @@ class Timeline:
 
     def add_metadata_to_dataframe(
         self,
-        df: pd.DataFrame,
         database_labels: list[str],
         fields: List[str] = ["name", "unit", "location", "categories"],
     ) -> pd.DataFrame:
