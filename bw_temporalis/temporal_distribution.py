@@ -323,9 +323,9 @@ class FixedTimeOfYearTD(TemporalDistribution):
         self.amount = amount.astype(np.float64)
         self.date = date.astype(timedelta_type)
         self.base_time_type = timedelta_type
-        if not np.alltrue(self.date.astype(int) >= 0):
+        if not np.all(self.date.astype(int) >= 0):
             raise ValueError("Can't have negative relative timedelta64 values")
-        elif not np.alltrue(self.date.astype(int) <= 365 * 24 * 60 * 60):
+        elif not np.all(self.date.astype(int) <= 365 * 24 * 60 * 60):
             raise ValueError("Can't have timedelta64 values more than one year")
 
     def __mul__(
