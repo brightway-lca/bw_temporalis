@@ -11,6 +11,7 @@ from bw2data.backends import ActivityDataset as AD
 from bw2data.backends import ExchangeDataset as ED
 from bw_graph_tools import NewNodeEachVisitGraphTraversal
 
+from .temporal_distribution import TDAware
 from .temporal_distribution import TemporalDistribution as TD
 from .timeline import Timeline
 
@@ -183,7 +184,7 @@ class TemporalisLCA:
                         td["__loader__"]
                     )
                 )
-        elif not (isinstance(td, TD) or td is None):
+        elif not (isinstance(td, (TD, TDAware)) or td is None):
             raise ValueError(
                 f"Can't understand value for `temporal_distribution` in exchange {exchange}"
             )
