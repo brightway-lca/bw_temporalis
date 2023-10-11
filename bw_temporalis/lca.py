@@ -1,4 +1,5 @@
 import json
+import warnings
 from collections import defaultdict
 from collections.abc import Iterable
 from datetime import datetime
@@ -12,9 +13,7 @@ from bw2data.backends import ActivityDataset as AD
 from bw2data.backends import ExchangeDataset as ED
 from bw_graph_tools import NewNodeEachVisitGraphTraversal
 
-from .temporal_distribution import TDAware
-from .temporal_distribution import TemporalDistribution
-from .temporal_distribution import TemporalDistribution as TD
+from .temporal_distribution import TDAware, TemporalDistribution
 from .timeline import Timeline
 
 
@@ -86,7 +85,7 @@ class TemporalisLCA:
     ):
         self.lca_object = lca_object
         self.unique_id = functional_unit_unique_id
-        self.t0 = TD(
+        self.t0 = TemporalDistribution(
             np.array([np.datetime64(starting_datetime)]),
             np.array([1]),
         )
@@ -122,9 +121,15 @@ class TemporalisLCA:
         for flow in self.flows:
             self.flow_mapping[flow.activity_unique_id].append(flow)
 
-    def build_timeline(self) -> Timeline:
+    def build_timeline(self, node_timeline: bool | None = False) -> Timeline:
         heap = []
         timeline = Timeline()
+
+        if node_timeline:
+            warnings.warn(
+                """This functionality is experimental, and will change.
+You have been warned."""
+            )
 
         for edge in self.edge_mapping[self.unique_id]:
             node = self.nodes[edge.producer_unique_id]
@@ -139,21 +144,37 @@ class TemporalisLCA:
 
         while heap:
             _, td, node = heappop(heap)
-            for flow in self.flow_mapping.get(node.unique_id, []):
-                for exchange in self.get_biosphere_exchanges(
-                    flow.flow_datapackage_id, node.activity_datapackage_id
-                ):
-                    value = self._exchange_value(
-                        exchange=exchange,
-                        row_id=flow.flow_datapackage_id,
-                        col_id=node.activity_datapackage_id,
-                        matrix_label="biosphere_matrix",
-                    )
-                    timeline.add_flow_temporal_distribution(
-                        td=(td * value).simplify(),
-                        flow=flow.flow_datapackage_id,
-                        activity=node.activity_datapackage_id,
-                    )
+            if node_timeline:
+                num_flows, num_flows_td = 0, 0
+                for flow in self.flow_mapping.get(node.unique_id, []):
+                    for exchange in self.get_biosphere_exchanges(
+                        flow.flow_datapackage_id, node.activity_datapackage_id
+                    ):
+                        if exchange.data.get("temporal_distribution"):
+                            num_flows_td += 1
+                        num_flows += 1
+                timeline.add_node_temporal_distribution(
+                    td=td,
+                    activity=node.activity_datapackage_id,
+                    num_flows=num_flows,
+                    num_flows_td=num_flows_td,
+                )
+            else:
+                for flow in self.flow_mapping.get(node.unique_id, []):
+                    for exchange in self.get_biosphere_exchanges(
+                        flow.flow_datapackage_id, node.activity_datapackage_id
+                    ):
+                        value = self._exchange_value(
+                            exchange=exchange,
+                            row_id=flow.flow_datapackage_id,
+                            col_id=node.activity_datapackage_id,
+                            matrix_label="biosphere_matrix",
+                        )
+                        timeline.add_flow_temporal_distribution(
+                            td=(td * value).simplify(),
+                            flow=flow.flow_datapackage_id,
+                            activity=node.activity_datapackage_id,
+                        )
 
             for edge in self.edge_mapping[node.unique_id]:
                 row_id = self.nodes[edge.producer_unique_id].activity_datapackage_id
@@ -202,7 +223,7 @@ class TemporalisLCA:
                         td["__loader__"]
                     )
                 )
-        elif not (isinstance(td, (TD, TDAware)) or td is None):
+        elif not (isinstance(td, (TemporalDistribution, TDAware)) or td is None):
             raise ValueError(
                 f"Can't understand value for `temporal_distribution` in exchange {exchange}"
             )

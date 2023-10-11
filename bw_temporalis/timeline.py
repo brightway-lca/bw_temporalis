@@ -35,6 +35,31 @@ class FlowTD:
     activity: int
 
 
+@dataclass
+class NodeTD:
+    """
+    Class for storing a temporal distribution associated only with an activity.
+
+    Attributes
+    ----------
+    distribution : TemporalDistribution
+    flow : int. Only included for compatibility with `FlowTD`. Always -1.
+    activity : int
+    num_flows : int. Number of biosphere flow edges from this node.
+    num_flows_td : int. Number of biosphere flow edges from this node with temporal distributions.
+
+    See Also
+    --------
+    bw_temporalis.temporal_distribution.TemporalDistribution: A container for a series of values spread over time.
+    """
+
+    distribution: TemporalDistribution
+    flow: int
+    activity: int
+    num_flows: int
+    num_flows_td: int
+
+
 class Timeline:
     """
     Sum and group elements over time.
@@ -71,8 +96,39 @@ class Timeline:
             FlowTD(distribution=td.nonzero(), flow=flow, activity=activity)
         )
 
+    def add_node_temporal_distribution(
+        self, td: TemporalDistribution, activity: int, num_flows: int, num_flows_td: int
+    ) -> None:
+        """
+        Append a TemporalDistribution object to the Timeline.data object.
+
+        Parameters
+        ----------
+        td : TemporalDistribution
+            Temporal distribution to add.
+        activity : int
+            Associated activity.
+        num_flows : int
+            Number of biosphere flow edges from this node.
+        num_flows_td : int
+            Number of biosphere flow edges from this node with temporal distributions.
+
+        See Also
+        --------
+        bw_temporalis.temporal_distribution.TemporalDistribution: A container for a series of values spread over time.
+        """
+        self.data.append(
+            NodeTD(
+                distribution=td.nonzero(),
+                flow=-1,
+                activity=activity,
+                num_flows=num_flows,
+                num_flows_td=num_flows_td,
+            )
+        )
+
     def __len__(self):
-        return len(self.date)
+        return len(self.data)
 
     def build_dataframe(self) -> None:
         """

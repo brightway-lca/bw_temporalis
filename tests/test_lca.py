@@ -254,6 +254,80 @@ def test_temporalis_lca(basic_db):
     pd.testing.assert_frame_equal(given_df, expected_df)
 
 
+@pytest.mark.xfail
+def test_temporalis_lca_node_timeline(basic_db):
+    lca = LCA({("db", "A"): 2}, ("m",))
+    lca.lci()
+    lca.lcia()
+
+    assert lca.score == 410
+
+    tlca = TemporalisLCA(
+        lca_object=lca,
+        starting_datetime="2023-01-01",
+    )
+
+    tl = tlca.build_timeline(node_timeline=True)
+    given_df = tl.build_dataframe()
+
+    print(given_df)
+
+    start = (
+        TD(
+            np.array([np.datetime64("2023-01-01")]),
+            np.array([1]),
+        )
+        * 2
+    )
+    a_td = easy_timedelta_distribution(0, 4, resolution="Y", steps=5) * 5
+    b_td = easy_timedelta_distribution(10, 17, steps=4, resolution="Y") * 8
+    c_td = a_td * 1
+    d_td = easy_timedelta_distribution(-8, -5, steps=4, resolution="Y") * 8
+    assert a_td.amount.sum() == 5
+    assert b_td.amount.sum() == 8
+    assert c_td.amount.sum() == 5
+    assert d_td.amount.sum() == 8
+
+    co2 = start * (a_td * b_td + a_td * d_td)
+    assert isinstance(co2, TD)
+    assert co2.amount.sum() == 80 + 80
+
+    ch4 = c_td
+    assert isinstance(ch4, TD)
+    assert ch4.amount.sum() == 5
+
+    expected_df = pd.DataFrame(
+        {
+            "date": np.hstack(
+                [
+                    (start * (a_td * b_td)).date,
+                    (start * (a_td * d_td)).date,
+                    (start * a_td).date,
+                ]
+            ),
+            "amount": np.hstack(
+                [
+                    (start * (a_td * b_td)).amount,
+                    (start * (a_td * d_td)).amount,
+                    (start * a_td).amount,
+                ]
+            ),
+            "flow": -1,
+            "activity": np.hstack(
+                [
+                    4 * np.ones_like((start * (a_td * b_td)).amount),
+                    6 * np.ones_like((start * (a_td * d_td)).amount),
+                    5 * np.ones_like((start * a_td).amount),
+                ]
+            ).astype(int),
+        }
+    )
+    expected_df.sort_values(by="date", ascending=True, inplace=True)
+    expected_df.reset_index(drop=True, inplace=True)
+
+    pd.testing.assert_frame_equal(given_df, expected_df)
+
+
 def test_temporalis_lca_draw_from_matrix(basic_db):
     lca = LCA({("db", "A"): 2}, ("m",))
     lca.lci()
