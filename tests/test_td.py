@@ -45,8 +45,8 @@ def test_mul_td(simple):
 
 def test_div_td_error(simple):
     td2 = TD(np.array((-1, 0, 1), dtype="datetime64[D]"), np.ones(3).astype(float))
-    with pytest.raises(ValueError):
-        td2 / 2
+    new_td = td2 / 2
+    assert np.allclose(new_td.amount, np.array([0.5, 0.5, 0.5]))
 
 
 def test_div_td_error_two(simple):

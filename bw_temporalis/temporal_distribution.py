@@ -175,9 +175,7 @@ class TemporalDistribution(TemporalDistributionBase):
             )
 
     def __truediv__(self, other: SupportsFloat) -> "TemporalDistribution":
-        if self.base_time_type == datetime_type:
-            raise ValueError("Can't divide a datetime array")
-        elif not isinstance(other, Number):
+        if not isinstance(other, Number):
             raise ValueError("Can only divide time deltas by a number")
         return TemporalDistribution(self.date, self.amount / float(other))
 
