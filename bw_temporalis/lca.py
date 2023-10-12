@@ -21,6 +21,12 @@ class MultipleTechnosphereExchanges(Exception):
     pass
 
 
+class NoExchange:
+    """The edge was created dynamically via a datapackage. There is no edge in the database."""
+
+    pass
+
+
 class TemporalisLCA:
     """
     Calculate an LCA using graph traversal, with edges using temporal distributions.
@@ -205,51 +211,67 @@ You have been warned."""
 
     def _exchange_value(
         self,
-        exchange: bd.backends.ExchangeDataset,
+        exchange: Union[bd.backends.ExchangeDataset, NoExchange],
         row_id: int,
         col_id: int,
         matrix_label: str,
     ) -> Union[float, TemporalDistribution]:
         from . import loader_registry
 
-        td = exchange.data.get("temporal_distribution")
-        if isinstance(td, str) and "__loader__" in td:
-            data = json.loads(td)
-            try:
-                td = loader_registry[td["__loader__"]](data)
-            except KeyError:
-                raise KeyError(
-                    "Can't find correct loader {} in `loader_registry`".format(
-                        td["__loader__"]
+        if exchange is NoExchange:
+            td = None
+        else:
+            td = exchange.data.get("temporal_distribution")
+            if isinstance(td, str) and "__loader__" in td:
+                data = json.loads(td)
+                try:
+                    td = loader_registry[td["__loader__"]](data)
+                except KeyError:
+                    raise KeyError(
+                        "Can't find correct loader {} in `loader_registry`".format(
+                            td["__loader__"]
+                        )
                     )
+            elif not (isinstance(td, (TemporalDistribution, TDAware)) or td is None):
+                raise ValueError(
+                    f"Can't understand value for `temporal_distribution` in exchange {exchange}"
                 )
-        elif not (isinstance(td, (TemporalDistribution, TDAware)) or td is None):
-            raise ValueError(
-                f"Can't understand value for `temporal_distribution` in exchange {exchange}"
-            )
 
-        sign = (
-            1
-            if exchange.data["type"] not in ("generic consumption", "technosphere")
-            else -1
-        )
+            sign = (
+                1
+                if exchange.data["type"] not in ("generic consumption", "technosphere")
+                else -1
+            )
 
         if matrix_label == "technosphere_matrix":
-            amount = (
-                sign
-                * self.lca_object.technosphere_matrix[
-                    self.lca_object.dicts.product[row_id],
-                    self.lca_object.dicts.activity[col_id],
-                ]
-            )
+            value = self.lca_object.technosphere_matrix[
+                self.lca_object.dicts.product[row_id],
+                self.lca_object.dicts.activity[col_id],
+            ]
+            if exchange is NoExchange:
+                # Assume technosphere input so negative sign, unless we have a
+                # positive value and the number is on the diagonal, or the
+                # IDs are the same (shared product/process, not on the diagonal
+                # for whatever reason).
+                if row_id == col_id:
+                    sign = 1
+                elif (
+                    value > 0
+                    and self.lca_object.dicts.biosphere[row_id]
+                    == self.lca_object.dicts.activity[col_id]
+                ):
+                    sign = 1
+                else:
+                    sign = -1
+
+            amount = sign * value
         elif matrix_label == "biosphere_matrix":
             amount = (
-                exchange.data.get("fraction", 1)
-                * self.lca_object.biosphere_matrix[
-                    self.lca_object.dicts.biosphere[row_id],
-                    self.lca_object.dicts.activity[col_id],
-                ]
-            )
+                exchange.data.get("fraction", 1) if exchange is not NoExchange else 1
+            ) * self.lca_object.biosphere_matrix[
+                self.lca_object.dicts.biosphere[row_id],
+                self.lca_object.dicts.activity[col_id],
+            ]
         else:
             raise ValueError(f"Unknown matrix type {matrix_label}")
 
@@ -277,8 +299,10 @@ You have been warned."""
             for exc in exchanges:
                 exc.data["fraction"] = exc.data["amount"] / total
                 yield exc
-        else:
+        elif len(exchanges) == 1:
             yield from exchanges
+        else:
+            yield NoExchange
 
     def get_technosphere_exchange(self, input_id: int, output_id: int) -> ED:
         def printer(x):
@@ -293,4 +317,8 @@ You have been warned."""
                     printer(exchanges[0].output),
                 )
             )
-        return exchanges[0]
+        elif not exchanges:
+            # Edge injected via datapackage, no exchange in dataset
+            return NoExchange
+        else:
+            return exchanges[0]
