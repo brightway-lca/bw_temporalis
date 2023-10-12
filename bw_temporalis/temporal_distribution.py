@@ -385,11 +385,40 @@ class FixedTD(TemporalDistribution):
 
     _mul_comes_first = True
 
+    def __add__(self, other: Any) -> None:
+        raise ValueError("`FixedTD` doesn't support addition")
+
     def __mul__(
         self, other: TemporalDistribution | Number
     ) -> TemporalDistribution | TDAware:
-        coeff = other if isinstance(other, Number) else other.amount.sum()
-        return TemporalDistribution(date=self.date, amount=self.amount * coeff)
+        if isinstance(other, Number):
+            return FixedTD(date=self.date, amount=self.amount * other)
+        elif isinstance(other, TDAware):
+            # Dynamic function takes priority
+            return other * self
+        elif isinstance(other, FixedTD):
+            # We are executing self * other, so the other wins
+            return other * self.amount.sum()
+        elif isinstance(other, FixedTimeOfYearTD):
+            # FixedTimeOfYearTD knows how to multiply absolute distributions
+            return other * self
+        elif (
+            isinstance(other, TemporalDistribution)
+            and other.base_time_type == datetime_type
+        ):
+            # We take priority over a normal absolute temporal distribution
+            return FixedTD(date=self.date, amount=self.amount * other.amount.sum())
+        elif isinstance(other, TemporalDistribution):
+            # Relative distribution; normal convolution
+            date, amount = temporal_convolution_datetime_timedelta(
+                first_date=self.date,
+                first_amount=self.amount,
+                second_date=other.date,
+                second_amount=other.amount,
+            )
+            return TemporalDistribution(date=date, amount=amount)
+        else:
+            raise ValueError("Can't multiply `FixedTD` and {}".format(type(other)))
 
     def to_json(self) -> str:
         return json.dumps(
