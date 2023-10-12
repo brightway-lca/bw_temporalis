@@ -439,9 +439,5 @@ def test_temporalis_lca_draw_from_matrix(basic_db):
         },
     ]
 
-    import pprint
-
     for a in expected_nodes:
-        pprint.pprint(tlca.nodes[a["unique_id"]])
-        pprint.pprint(a)
         node_equal_dict(tlca.nodes[a["unique_id"]], a)
