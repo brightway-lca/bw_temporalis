@@ -313,8 +313,8 @@ You have been warned."""
             raise MultipleTechnosphereExchanges(
                 "Found {} exchanges for link between {} and {}".format(
                     len(exchanges),
-                    printer(exchanges[0].input),
-                    printer(exchanges[0].output),
+                    printer(exchanges[0].input_code),
+                    printer(exchanges[0].output_code),
                 )
             )
         elif not exchanges:
