@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [0.9.3] - 2024-03-08
+
+* Merge [#45](https://github.com/brightway-lca/bw_temporalis/pull/45) - Fix error message for multiple incoming edges
+
 ### [0.9.2] - 2023-10-12
 
 * Merge [#37](https://github.com/brightway-lca/bw_temporalis/pull/37) - Allow matrix edges without database `Exchange` objs
