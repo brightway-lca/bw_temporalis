@@ -306,16 +306,16 @@ You have been warned."""
 
     def get_technosphere_exchange(self, input_id: int, output_id: int) -> ED:
         def printer(x):
-            return "{}|{}|{}".format(x.database, x.name, x.code)
+            return "({}|{}|{})".format(x['database'], x['code'], x['name'])
 
         exchanges = self._exchange_iterator(input_id, output_id)
         if len(exchanges) > 1:
+            _exchange = Exchange(exchanges[0])
             raise MultipleTechnosphereExchanges(
                 "Found {} exchanges for link between {} and {}".format(
                     len(exchanges),
-                    printer(exchanges[0].input),
-                    printer(exchanges[0].output),
-                )
+                    printer(_exchange.input),
+                    printer(_exchange.output))
             )
         elif not exchanges:
             # Edge injected via datapackage, no exchange in dataset
