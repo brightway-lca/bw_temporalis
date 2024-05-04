@@ -1,0 +1,20 @@
+name: sphinx_bw_graph_tools
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  # core functionality
+  - python
+  - ipython
+  # sphinx
+  - sphinx # core builder # https://anaconda.org/conda-forge/sphinx/files
+  # theme and extensions
+  - sphinx_rtd_theme # theme # https://anaconda.org/conda-forge/sphinx_rtd_theme/files
+  - myst-parser # Markdown support # https://anaconda.org/conda-forge/myst-parser/files
+  - sphinx-design # responsive web component support # https://anaconda.org/conda-forge/sphinx-design/files
+  - sphinx-copybutton # for copy button in code blocks # https://anaconda.org/conda-forge/sphinx-copybutton/files
+  - sphinx-autoapi # to build docs from source code instead of package import # https://anaconda.org/conda-forge/sphinx-autoapi/files
+  - sphinx-notfound-page # custom 404 page # https://anaconda.org/conda-forge/sphinx-notfound-page/files
+  - sphinx-copybutton # for copy button in code blocks # https://anaconda.org/conda-forge/sphinx-copybutton/files
+  # build process
+  - sphinx-autobuild # live-html support # https://anaconda.org/conda-forge/sphinx-autobuild/files

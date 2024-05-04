@@ -1,24 +1,21 @@
-```{include} ../README.md
----
-end-before: <!-- github-only -->
----
-```
+# Brightway Temporalis
 
-[license]: license
-[contributor guide]: contributing
-[command-line reference]: usage
-[changelog]: changelog
+```{button-link} https://docs.brightway.dev
+:color: info
+:expand:
+{octicon}`light-bulb;1em` Brightway Temporalis is a specialized package of the Brightway Software Framework
+```
 
 ```{toctree}
 ---
 hidden:
 maxdepth: 1
 ---
-
-Usage
-Reference <api/modules>
-contributing
-Code of Conduct <codeofconduct>
-License <license>
-Changelog <changelog>
+self
+content/usage
+content/api/index
+content/changelog
+content/contributing
+content/codeofconduct
+content/license
 ```
