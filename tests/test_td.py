@@ -19,13 +19,11 @@ def test_init():
         TD(np.arange(5), np.ones(5) * 2)
 
 
-def test_mul_wrong_type(simple):
+def test_mul_fixed_by_fixed(simple):
     first = TD(np.arange(0, 5, dtype="datetime64[D]"), np.ones(5) * 2)
     second = TD(np.array((-1, 0, 1), dtype="datetime64[D]"), np.ones(3).astype(float))
-    with pytest.raises(ValueError):
-        first * second
-    with pytest.raises(ValueError):
-        second * first
+    assert np.array_equal(first * second, second)
+    assert np.array_equal(second * first, first)
 
 
 def test_mul_td(simple):
