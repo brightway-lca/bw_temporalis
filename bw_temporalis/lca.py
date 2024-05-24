@@ -101,11 +101,8 @@ class TemporalisLCA:
 
         for db in bd.databases:
             if bd.databases[db].get("static"):
-                static_activity_indices.add(
-                    {
-                        obj[0]
-                        for obj in AD.select(AD.id).where(AD.database == db).tuples()
-                    }
+                static_activity_indices.update(
+                    obj[0] for obj in AD.select(AD.id).where(AD.database == db).tuples()
                 )
 
         print("Starting graph traversal")
