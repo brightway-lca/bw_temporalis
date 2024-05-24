@@ -1,13 +1,21 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, unicode_literals
+
+from brightway2 import Database, Method, databases, methods
 from eight import *
 
-
-from brightway2 import Database, databases, Method, methods
-from .. import dynamic_methods, DynamicIAMethod
+from .. import DynamicIAMethod, dynamic_methods
+from .ia import (
+    cumulative_CH4,
+    cumulative_CO2,
+    dynamic_cfs,
+    dynamic_discounted_cfs,
+    linear_decrease_weight,
+    marginal_CH4,
+    marginal_CO2,
+    static_cfs,
+)
 from .inv import db_data
-from .ia import static_cfs, dynamic_cfs, dynamic_discounted_cfs
-from .ia import cumulative_CO2, marginal_CO2, cumulative_CH4, marginal_CH4, linear_decrease_weight
 
 
 def import_example_data():
