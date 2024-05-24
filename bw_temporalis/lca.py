@@ -82,7 +82,7 @@ class TemporalisLCA:
         cutoff: float | None = 5e-4,
         biosphere_cutoff: float | None = 1e-6,
         max_calc: int | None = 2e3,
-        static_activity_indices: set[int] | None = set(),
+        static_activity_indices: set[int] | None = None,
         skip_coproducts: bool | None = False,
         functional_unit_unique_id: int | None = -1,
         graph_traversal: (
@@ -95,6 +95,10 @@ class TemporalisLCA:
             np.array([np.datetime64(starting_datetime)]),
             np.array([1]),
         )
+
+        if static_activity_indices is None:
+            static_activity_indices = set()
+
         for db in bd.databases:
             if bd.databases[db].get("static"):
                 static_activity_indices.add(
