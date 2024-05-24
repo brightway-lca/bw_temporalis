@@ -441,3 +441,19 @@ def test_temporalis_lca_draw_from_matrix(basic_db):
 
     for a in expected_nodes:
         node_equal_dict(tlca.nodes[a["unique_id"]], a)
+
+
+def test_lca_provide_static_activity_indices():
+    lca = LCA({("db", "A"): 2}, ("m",))
+    lca.lci()
+    lca.lcia()
+
+    tlca = TemporalisLCA(
+        lca_object=lca,
+        static_activity_indices={1001, 1002}
+    )
+    with pytest.raises(TypeError):
+        tlca = TemporalisLCA(
+            lca_object=lca,
+            static_activity_indices=1001
+        )
