@@ -65,7 +65,7 @@ class TemporalisLCA:
     max_calc : int
         Total number of LCA inventory calculations to perform during graph traversal
     static_activity_indices : set[int]
-        Activity `id` values where graph traversal will stop
+        Activity database node `id` values where graph traversal will stop
     skip_coproducts : bool
         Should we also traverse edges for the other products in multioutput activities?
     functional_unit_unique_id : int
@@ -81,7 +81,7 @@ class TemporalisLCA:
         starting_datetime: datetime | str = "now",
         cutoff: float | None = 5e-4,
         biosphere_cutoff: float | None = 1e-6,
-        max_calc: int | None = 2e3,
+        max_calc: int | None = 2000,
         static_activity_indices: set[int] | None = None,
         skip_coproducts: bool | None = False,
         functional_unit_unique_id: int | None = -1,
@@ -104,6 +104,11 @@ class TemporalisLCA:
                 static_activity_indices.update(
                     obj[0] for obj in AD.select(AD.id).where(AD.database == db).tuples()
                 )
+
+        # Translate database indices to matrix indices which `graph_traversal` expects
+        static_activity_indices = {
+            self.lca_object.dicts.activity[x] for x in static_activity_indices
+        }
 
         print("Starting graph traversal")
         gt = graph_traversal.calculate(
@@ -307,16 +312,15 @@ You have been warned."""
 
     def get_technosphere_exchange(self, input_id: int, output_id: int) -> ED:
         def printer(x):
-            return "({}|{}|{})".format(x['database'], x['code'], x['name'])
+            return "({}|{}|{})".format(x["database"], x["code"], x["name"])
 
         exchanges = self._exchange_iterator(input_id, output_id)
         if len(exchanges) > 1:
             _exchange = Exchange(exchanges[0])
             raise MultipleTechnosphereExchanges(
                 "Found {} exchanges for link between {} and {}".format(
-                    len(exchanges),
-                    printer(_exchange.input),
-                    printer(_exchange.output))
+                    len(exchanges), printer(_exchange.input), printer(_exchange.output)
+                )
             )
         elif not exchanges:
             # Edge injected via datapackage, no exchange in dataset

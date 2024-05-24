@@ -254,6 +254,99 @@ def test_temporalis_lca(basic_db):
     pd.testing.assert_frame_equal(given_df, expected_df)
 
 
+@bw2test
+def test_temporalis_static_indices_correct_lookup():
+    bd.projects.set_current("__test_fixture__")
+
+    db = bd.Database("db")
+    # Push indices forward
+    bd.Database("fake").write(
+        {
+            ("fake", str(x)): {"type": "process", "exchanges": [], "name": "foo"}
+            for x in range(1000)
+        }
+    )
+    db.write(
+        {
+            ("db", "CO2"): {
+                "type": "emission",
+                "name": "carbon dioxide",
+            },
+            ("db", "CH4"): {
+                "type": "emission",
+                "name": "methane",
+            },
+            ("db", "A"): {
+                "name": "Functional Unit",
+                "exchanges": [
+                    {
+                        "amount": 5,
+                        "input": ("db", "B"),
+                        "temporal_distribution": easy_timedelta_distribution(
+                            0, 4, resolution="Y", steps=5
+                        ),
+                        "type": "technosphere",
+                    },
+                ],
+            },
+            ("db", "B"): {
+                "exchanges": [
+                    {"amount": 2, "input": ("db", "C"), "type": "technosphere"},
+                    {"amount": 4, "input": ("db", "D"), "type": "technosphere"},
+                    {
+                        "amount": 8,
+                        "input": ("db", "CO2"),
+                        "type": "biosphere",
+                        "temporal_distribution": easy_timedelta_distribution(
+                            10, 17, steps=4, resolution="Y"
+                        ),
+                    },
+                ],
+                "name": "B",
+            },
+            ("db", "C"): {
+                "exchanges": [
+                    {
+                        "amount": 0.5,
+                        "input": ("db", "CH4"),
+                        "type": "biosphere",
+                    },
+                ]
+            },
+            ("db", "D"): {
+                "exchanges": [
+                    {
+                        "amount": 2,
+                        "input": ("db", "CO2"),
+                        "type": "biosphere",
+                        "temporal_distribution": easy_timedelta_distribution(
+                            -8, -5, steps=4, resolution="Y"
+                        ),
+                    },
+                ]
+            },
+        }
+    )
+    bd.Method(("m",)).write([(("db", "CO2"), 1), (("db", "CH4"), 25)])
+
+    lca = LCA({("db", "A"): 2}, ("m",))
+    lca.lci()
+    lca.lcia()
+
+    assert lca.score == 410
+
+    static_indices = {x.id for x in db if x.get("type", "process") == "process"}
+    assert min(static_indices) > 500
+
+    tlca = TemporalisLCA(
+        lca_object=lca,
+        starting_datetime="2023-01-01",
+        static_activity_indices=static_indices,
+    )
+    # No timeline because everything is static
+    assert not tlca.build_timeline()
+
+
 @pytest.mark.xfail
 def test_temporalis_lca_node_timeline(basic_db):
     lca = LCA({("db", "A"): 2}, ("m",))
@@ -443,17 +536,16 @@ def test_temporalis_lca_draw_from_matrix(basic_db):
         node_equal_dict(tlca.nodes[a["unique_id"]], a)
 
 
-def test_lca_provide_static_activity_indices():
+def test_lca_provide_static_activity_indices(basic_db):
     lca = LCA({("db", "A"): 2}, ("m",))
     lca.lci()
     lca.lcia()
 
-    tlca = TemporalisLCA(
+    TemporalisLCA(
         lca_object=lca,
-        static_activity_indices={1001, 1002}
+        static_activity_indices=[
+            x.id for x in basic_db if x.get("type", "process") == "process"
+        ][:2],
     )
     with pytest.raises(TypeError):
-        tlca = TemporalisLCA(
-            lca_object=lca,
-            static_activity_indices=1001
-        )
+        TemporalisLCA(lca_object=lca, static_activity_indices=1001)
