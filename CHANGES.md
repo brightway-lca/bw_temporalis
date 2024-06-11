@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.1.1] - 2024-06-11
 
-* Fix [#53](https://github.com/brightway-lca/bw_temporalis/issues/53) - Missing import
+* Fix [#53](https://github.com/brightway-lca/bw_temporalis/issues/53) - Missing import added
 
 ## [1.1] - 2024-05-23
 
