@@ -10,6 +10,7 @@ import bw2data as bd
 import numpy as np
 from bw2calc import LCA
 from bw2data.backends import ActivityDataset as AD
+from bw2data.backends import Exchange
 from bw2data.backends import ExchangeDataset as ED
 from bw_graph_tools import NewNodeEachVisitGraphTraversal
 

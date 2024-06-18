@@ -8,6 +8,7 @@ from bw_graph_tools.testing import flow_equal_dict, node_equal_dict
 
 from bw_temporalis import TemporalDistribution as TD
 from bw_temporalis import TemporalisLCA, easy_timedelta_distribution
+from bw_temporalis.lca import MultipleTechnosphereExchanges
 
 
 @pytest.fixture
@@ -61,7 +62,8 @@ def basic_db():
                         "input": ("db", "CH4"),
                         "type": "biosphere",
                     },
-                ]
+                ],
+                "name": "C",
             },
             ("db", "D"): {
                 "exchanges": [
@@ -73,7 +75,8 @@ def basic_db():
                             -8, -5, steps=4, resolution="Y"
                         ),
                     },
-                ]
+                ],
+                "name": "D",
             },
         }
     )
@@ -549,3 +552,22 @@ def test_lca_provide_static_activity_indices(basic_db):
     )
     with pytest.raises(TypeError):
         TemporalisLCA(lca_object=lca, static_activity_indices=1001)
+
+def test_multiple_technosphere_exchanges_error(basic_db):
+    EXPECTED = "Found 2 exchanges for link between (db|C|C) and (db|B|B)"
+    # add a second exchange of C to activity B
+    b = bd.get_activity(("db", "B"))
+    b.new_edge(
+        input=bd.get_activity(("db", "C")),
+        type="technosphere",
+        amount=1.5,
+    ).save()
+    # normal LCA
+    lca = LCA({("db", "B"): 1}, method=("m",))
+    lca.lci()
+    lca.lcia()
+    #TemporalisLCA
+    dlca = TemporalisLCA(lca)
+    with pytest.raises(MultipleTechnosphereExchanges) as exc:
+        dlca.build_timeline()
+    assert str(exc.value) == EXPECTED
