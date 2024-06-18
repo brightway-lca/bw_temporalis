@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/pypi/l/bw_temporalis)][license]
 
 [![Read the documentation at https://bw_temporalis.readthedocs.io/](https://img.shields.io/readthedocs/bw_temporalis/latest.svg?label=Read%20the%20Docs)][read the docs]
-[![Tests](https://github.com/brightway-lca/bw_temporalis/workflows/Tests/badge.svg)][tests]
+[![Tests](https://github.com/brightway-lca/bw_temporalis/actions/workflows/python-test.yml/badge.svg)][tests]
 [![Codecov](https://codecov.io/gh/brightway-lca/bw_temporalis/branch/main/graph/badge.svg)][codecov]
 
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)][pre-commit]
@@ -14,7 +14,7 @@
 
 [pypi status]: https://pypi.org/project/bw_temporalis/
 [read the docs]: https://bw_temporalis.readthedocs.io/
-[tests]: https://github.com/brightway-lca/bw_temporalis/actions?workflow=Tests
+[tests]: https://github.com/brightway-lca/bw_temporalis/actions/workflows/python-test.yml
 [codecov]: https://app.codecov.io/gh/brightway-lca/bw_temporalis
 [pre-commit]: https://github.com/pre-commit/pre-commit
 [black]: https://github.com/psf/black
