@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 from bw2calc import LCA
 from bw2data.tests import bw2test
+from collections import namedtuple
 
 from bw_temporalis import TemporalisLCA, easy_timedelta_distribution
 from bw_temporalis.temporal_distribution import TemporalDistribution
@@ -111,24 +112,22 @@ def define_dataframes() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     return (df_input, df_expected_characterize, df_expected_sum_days_to_years)
 
 
-def function_characterization_test(series: pd.Series, period: int = 2) -> pd.DataFrame:
-    date_beginning: np.datetime64 = series["date"].to_numpy()
+def function_characterization_test(series: namedtuple, period: int = 2) -> namedtuple:
+    date_beginning: np.datetime64 = series.date.to_numpy()
     dates_characterized: np.ndarray = date_beginning + np.arange(
         start=0, stop=period, dtype="timedelta64[Y]"
     ).astype("timedelta64[s]")
 
-    amount_beginning: float = series["amount"]
+    amount_beginning: float = series.amount
     amount_characterized: np.ndarray = amount_beginning - np.arange(
         start=0, stop=period, dtype="int"
     )
 
-    return pd.DataFrame(
-        {
-            "date": pd.Series(data=dates_characterized.astype("datetime64[s]")),
-            "amount": pd.Series(data=amount_characterized, dtype="float64"),
-            "flow": series.flow,
-            "activity": series.activity,
-        }
+    return namedtuple("CharacterizedRow", ["date", "amount", "flow", "activity"])(
+        date=np.array(dates_characterized, dtype="datetime64[s]"),
+        amount=amount_characterized,
+        flow=series.flow,
+        activity=series.activity,
     )
 
 
