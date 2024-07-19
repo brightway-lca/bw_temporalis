@@ -241,8 +241,8 @@ class Timeline:
         if "date" in result_df.columns:
             result_df = (
                 result_df.explode(["amount", "date"])
-                .astype({"amount": "float64"})
-                .sort_values(by="date")
+                .astype({"date": "datetime64[s]", "amount": "float64"})
+                .sort_values(by=["date", "amount"])
                 .reset_index(drop=True)
             )
         if cumsum and "amount" in result_df:
