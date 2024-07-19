@@ -1,12 +1,18 @@
 import numpy as np
 import pandas as pd
 
+from collections import namedtuple
+
+CharacterizedRow = namedtuple(
+    "CharacterizedRow", ["date", "amount", "flow", "activity"]
+)
+
 
 def characterize_co2(
     series,
     period: int | None = 100,
     cumulative: bool | None = False,
-) -> pd.DataFrame:
+) -> CharacterizedRow:
     """
     Calculate the cumulative or marginal radiative forcing (CRF) from CO2 for each year in a given period.
 
@@ -39,8 +45,8 @@ def characterize_co2(
     tau_1, tau_2, tau_3 = 394.4, 36.54, 4.304
     decay_term = lambda year, alpha, tau: alpha * tau * (1 - np.exp(-year / tau))
 
-    date_beginning: np.datetime64 = series["date"].to_numpy()
-    date_characterized: np.ndarray = date_beginning + np.arange(
+    date_beginning: np.datetime64 = series.date.to_numpy()
+    dates_characterized: np.ndarray = date_beginning + np.arange(
         start=0, stop=period, dtype="timedelta64[Y]"
     ).astype("timedelta64[s]")
 
@@ -61,17 +67,17 @@ def characterize_co2(
     if not cumulative:
         forcing = forcing.diff(periods=1).fillna(0)
 
-    return pd.DataFrame(
-        {
-            "date": pd.Series(data=date_characterized, dtype="datetime64[s]"),
-            "amount": forcing,
-            "flow": series.flow,
-            "activity": series.activity,
-        }
+    return CharacterizedRow(
+        date=np.array(dates_characterized, dtype="datetime64[s]"),
+        amount=forcing,
+        flow=series.flow,
+        activity=series.activity,
     )
 
 
-def characterize_methane(series, period: int = 100, cumulative=False) -> pd.DataFrame:
+def characterize_methane(
+    series, period: int = 100, cumulative=False
+) -> CharacterizedRow:
     """
     Calculate the cumulative or marginal radiative forcing (CRF) from CH4 for each year in a given period.
 
@@ -113,8 +119,8 @@ def characterize_methane(series, period: int = 100, cumulative=False) -> pd.Data
     alpha = 1.27e-13  # Radiative forcing (W/m2/kg)
     tau = 12.4  # Lifetime (years)
 
-    date_beginning: np.datetime64 = series["date"].to_numpy()
-    date_characterized: np.ndarray = date_beginning + np.arange(
+    date_beginning: np.datetime64 = series.date.to_numpy()
+    dates_characterized: np.ndarray = date_beginning + np.arange(
         start=0, stop=period, dtype="timedelta64[Y]"
     ).astype("timedelta64[s]")
 
@@ -129,11 +135,9 @@ def characterize_methane(series, period: int = 100, cumulative=False) -> pd.Data
     if not cumulative:
         forcing = forcing.diff(periods=1).fillna(0)
 
-    return pd.DataFrame(
-        {
-            "date": pd.Series(data=date_characterized, dtype="datetime64[s]"),
-            "amount": forcing,
-            "flow": series.flow,
-            "activity": series.activity,
-        }
+    return CharacterizedRow(
+        date=np.array(dates_characterized, dtype="datetime64[s]"),
+        amount=forcing,
+        flow=series.flow,
+        activity=series.activity,
     )
