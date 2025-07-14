@@ -157,9 +157,9 @@ class Timeline:
             )
 
         amount = np.hstack([o.distribution.amount for o in self.data])
-        flow = np.hstack([o.flow * np.ones(len(o.distribution)) for o in self.data])
+        flow = np.hstack([o.flow * np.ones(len(o.distribution), dtype=np.int64) for o in self.data])
         activity = np.hstack(
-            [o.activity * np.ones(len(o.distribution)) for o in self.data]
+            [o.activity * np.ones(len(o.distribution), dtype=np.int64) for o in self.data]
         )
 
         self.df = pd.DataFrame(
@@ -168,8 +168,8 @@ class Timeline:
                     data=date.astype("datetime64[s]"), dtype="datetime64[s]"
                 ),
                 "amount": pd.Series(data=amount, dtype="float64"),
-                "flow": pd.Series(data=flow, dtype="int"),
-                "activity": pd.Series(data=activity, dtype="int"),
+                "flow": pd.Series(data=flow, dtype="int64"),
+                "activity": pd.Series(data=activity, dtype="int64"),
             }
         )
         self.df.sort_values(by="date", ascending=True, inplace=True)
