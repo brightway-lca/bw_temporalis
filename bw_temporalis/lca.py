@@ -124,14 +124,14 @@ class TemporalisLCA:
             "skip_coproducts": skip_coproducts,
             "functional_unit_unique_id": functional_unit_unique_id,
         }
-        
+
         # Get the parameters accepted by graph_traversal.calculate
         calculate_signature = inspect.signature(graph_traversal.calculate)
         accepted_params = set(calculate_signature.parameters.keys())
-        
+
         # Filter kwargs to only include accepted parameters
         filtered_kwargs = {
-            key: value for key, value in all_kwargs.items() 
+            key: value for key, value in all_kwargs.items()
             if key in accepted_params
         }
 

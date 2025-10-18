@@ -588,7 +588,7 @@ def test_flexible_graph_traversal_kwargs(basic_db):
         ):
             # Use the default graph traversal to get valid results
             from bw_graph_tools import NewNodeEachVisitGraphTraversal
-            
+
             return NewNodeEachVisitGraphTraversal.calculate(
                 lca_object=lca_object,
                 static_activity_indices=static_activity_indices,
@@ -599,12 +599,12 @@ def test_flexible_graph_traversal_kwargs(basic_db):
                 skip_coproducts=skip_coproducts,
                 functional_unit_unique_id=functional_unit_unique_id,
             )
-    
+
     # Test that using the mock graph traversal doesn't raise an error
     lca = LCA({("db", "A"): 2}, ("m",))
     lca.lci()
     lca.lcia()
-    
+
     # This should work without raising a TypeError about unexpected keyword arguments
     tlca = TemporalisLCA(
         lca_object=lca,
@@ -612,7 +612,7 @@ def test_flexible_graph_traversal_kwargs(basic_db):
         graph_traversal=MockGraphTraversal,
         biosphere_cutoff=1e-6,  # This should be ignored since MockGraphTraversal doesn't accept it
     )
-    
+
     # Verify the results are still valid
     assert len(tlca.nodes) > 0
     assert len(tlca.flows) == 3
