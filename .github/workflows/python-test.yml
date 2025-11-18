@@ -36,7 +36,7 @@ jobs:
         py-version: ["3.10"] # 3.11 build of scikit-network is broken
 
     steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       # general Python setup
       - name: Set up Python ${{ matrix.py-version }}
