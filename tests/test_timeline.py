@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 from bw2calc import LCA
 from bw2data.tests import bw2test
+from collections import namedtuple
 
 from bw_temporalis import TemporalisLCA, easy_timedelta_distribution
 from bw_temporalis.temporal_distribution import TemporalDistribution
@@ -34,18 +35,18 @@ def define_dataframes() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
 
     | date       | amount | flow | activity |
     |------------|--------|------|----------|
-    | 20-12-2020 | 10     | 1    | 2        |
-    | 15-12-2020 | 20     | 1    | 2        |
+    | 15-12-2020 | 10     | 1    | 2        |
+    | 20-12-2020 | 20     | 1    | 2        |
     | 25-05-2022 | 50     | 3    | 4        |
 
     df_expected_characterize:
 
     | date       | amount | flow | activity |
     |------------|--------|------|----------|
-    | 20-12-2020 | 10     | 1    | 2        |
-    | 21-12-2020 | 9      | 1    | 2        |
-    | 15-12-2020 | 20     | 1    | 2        |
-    | 16-12-2020 | 19     | 1    | 2        |
+    | 15-12-2020 | 10     | 1    | 2        |
+    | 16-12-2020 | 9      | 1    | 2        |
+    | 20-12-2020 | 20     | 1    | 2        |
+    | 21-12-2020 | 19     | 1    | 2        |
     | 25-05-2022 | 50     | 3    | 4        |
     | 26-05-2022 | 49     | 3    | 4        |
 
@@ -61,20 +62,17 @@ def define_dataframes() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         data={
             "date": pd.Series(
                 data=[
-                    "20-12-2020",
-                    "21-12-2020",
                     "15-12-2020",
-                    "16-12-2020",
+                    "20-12-2020",
                     "25-05-2022",
-                    "26-05-2022",
                 ],
                 dtype="datetime64[s]",
             ),
             "amount": pd.Series(
-                data=[10.0, 9.0, 20.0, 19.0, 50.0, 49.0], dtype="float64"
+                data=[10.0, 20.0, 50.0], dtype="float64"
             ),
-            "flow": pd.Series(data=[1, 1, 1, 1, 3, 3], dtype="int"),
-            "activity": pd.Series(data=[2, 2, 2, 2, 4, 4], dtype="int"),
+            "flow": pd.Series(data=[1, 1, 3], dtype="int"),
+            "activity": pd.Series(data=[2, 2, 4], dtype="int"),
         }
     )
 
@@ -82,10 +80,10 @@ def define_dataframes() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         data={
             "date": pd.Series(
                 data=[
-                    "20-12-2020",
-                    "21-12-2020",
                     "15-12-2020",
                     "16-12-2020",
+                    "20-12-2020",
+                    "21-12-2020",
                     "25-05-2022",
                     "26-05-2022",
                 ],
@@ -111,30 +109,33 @@ def define_dataframes() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     return (df_input, df_expected_characterize, df_expected_sum_days_to_years)
 
 
-def function_characterization_test(series: pd.Series, period: int = 2) -> pd.DataFrame:
-    date_beginning: np.datetime64 = series["date"].to_numpy()
+def function_characterization_test(series: namedtuple, period: int = 2) -> namedtuple:
+    date_beginning: np.datetime64 = series.date.to_numpy()
     dates_characterized: np.ndarray = date_beginning + np.arange(
-        start=0, stop=period, dtype="timedelta64[Y]"
+        start=0, stop=period, dtype="timedelta64[D]"
     ).astype("timedelta64[s]")
 
-    amount_beginning: float = series["amount"]
+    amount_beginning: float = series.amount
     amount_characterized: np.ndarray = amount_beginning - np.arange(
         start=0, stop=period, dtype="int"
     )
 
-    return pd.DataFrame(
-        {
-            "date": pd.Series(data=dates_characterized.astype("datetime64[s]")),
-            "amount": pd.Series(data=amount_characterized, dtype="float64"),
-            "flow": series.flow,
-            "activity": series.activity,
-        }
+    return namedtuple("CharacterizedRow", ["date", "amount", "flow", "activity"])(
+        date=np.array(dates_characterized, dtype="datetime64[s]"),
+        amount=amount_characterized,
+        flow=series.flow,
+        activity=series.activity,
     )
 
 
-@pytest.mark.skip("Not yet")
 def test_characterization():
-    pass
+    df_input, df_expected_characterize, _ = define_dataframes()
+    tl = Timeline()
+    tl.df = df_input
+    df_characterized = tl.characterize_dataframe(function_characterization_test, cumsum=False)
+    
+    pd.testing.assert_frame_equal(df_characterized, df_expected_characterize)
+
 
 
 @bw2test
