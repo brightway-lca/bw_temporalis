@@ -571,3 +571,50 @@ def test_multiple_technosphere_exchanges_error(basic_db):
     with pytest.raises(MultipleTechnosphereExchanges) as exc:
         dlca.build_timeline()
     assert str(exc.value) == EXPECTED
+
+
+def test_flexible_graph_traversal_kwargs(basic_db):
+    """Test that TemporalisLCA works with graph traversal classes that don't accept all kwargs."""
+    # Create a mock graph traversal class that doesn't accept biosphere_cutoff and separate_biosphere_flows
+    class MockGraphTraversal:
+        @staticmethod
+        def calculate(
+            lca_object,
+            static_activity_indices,
+            max_calc,
+            cutoff,
+            skip_coproducts,
+            functional_unit_unique_id,
+        ):
+            # Use the default graph traversal to get valid results
+            from bw_graph_tools import NewNodeEachVisitGraphTraversal
+
+            return NewNodeEachVisitGraphTraversal.calculate(
+                lca_object=lca_object,
+                static_activity_indices=static_activity_indices,
+                max_calc=max_calc,
+                cutoff=cutoff,
+                biosphere_cutoff=1e-6,  # Use default value
+                separate_biosphere_flows=True,  # Use default value
+                skip_coproducts=skip_coproducts,
+                functional_unit_unique_id=functional_unit_unique_id,
+            )
+
+    # Test that using the mock graph traversal doesn't raise an error
+    lca = LCA({("db", "A"): 2}, ("m",))
+    lca.lci()
+    lca.lcia()
+
+    # This should work without raising a TypeError about unexpected keyword arguments
+    tlca = TemporalisLCA(
+        lca_object=lca,
+        starting_datetime="2023-01-01",
+        graph_traversal=MockGraphTraversal,
+        biosphere_cutoff=1e-6,  # This should be ignored since MockGraphTraversal doesn't accept it
+    )
+
+    # Verify the results are still valid
+    assert len(tlca.nodes) > 0
+    assert len(tlca.flows) == 3
+    tl = tlca.build_timeline()
+    assert tl is not None
