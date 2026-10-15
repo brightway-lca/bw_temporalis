@@ -32,6 +32,8 @@ from .utils import (
 
 loader_registry = {
     "bw_temporalis.TemporalDistribution": TemporalDistribution.from_json,
+    "bw_temporalis.FixedTimeOfYearTD": FixedTimeOfYearTD.from_json,
+    # Old key which doesn't match the `__loader__` written by `FixedTimeOfYearTD.to_json()`
     "bw_temporalis.FixedTimeOfYear": FixedTimeOfYearTD.from_json,
     "bw_temporalis.FixedTD": FixedTD.from_json,
 }

@@ -1,7 +1,7 @@
 import json
 import warnings
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import datetime
 from heapq import heappop, heappush
 from typing import Union
@@ -26,6 +26,37 @@ class NoExchange:
     """The edge was created dynamically via a datapackage. There is no edge in the database."""
 
     pass
+
+
+def load_temporal_distribution(
+    value: Union[str, Mapping, TemporalDistribution, TDAware, None],
+) -> Union[TemporalDistribution, TDAware, None]:
+    """Load the ``temporal_distribution`` value stored in an exchange.
+
+    ``bw2data`` stores ``TemporalDistribution`` objects as their ``to_json()`` string; these
+    are loaded with the ``loader_registry`` function for their ``__loader__``. Objects stored
+    directly (e.g. ``TDAware`` subclasses, or data written by older versions of ``bw2data``)
+    are returned unchanged.
+
+    Raises ``KeyError`` if the ``__loader__`` isn't in ``loader_registry``, and
+    ``ValueError`` if the value can't be understood."""
+    from . import loader_registry
+
+    if isinstance(value, str) and "__loader__" in value:
+        value = json.loads(value)
+    if isinstance(value, Mapping) and "__loader__" in value:
+        try:
+            loader = loader_registry[value["__loader__"]]
+        except KeyError:
+            raise KeyError(
+                "Can't find correct loader {} in `loader_registry`".format(
+                    value["__loader__"]
+                )
+            )
+        value = loader(value)
+    if not (isinstance(value, (TemporalDistribution, TDAware)) or value is None):
+        raise ValueError(f"Can't understand temporal distribution value {value}")
+    return value
 
 
 class TemporalisLCA:
@@ -223,23 +254,14 @@ You have been warned."""
         col_id: int,
         matrix_label: str,
     ) -> Union[float, TemporalDistribution]:
-        from . import loader_registry
-
         if exchange is NoExchange:
             td = None
         else:
-            td = exchange.data.get("temporal_distribution")
-            if isinstance(td, str) and "__loader__" in td:
-                data = json.loads(td)
-                try:
-                    td = loader_registry[td["__loader__"]](data)
-                except KeyError:
-                    raise KeyError(
-                        "Can't find correct loader {} in `loader_registry`".format(
-                            td["__loader__"]
-                        )
-                    )
-            elif not (isinstance(td, (TemporalDistribution, TDAware)) or td is None):
+            try:
+                td = load_temporal_distribution(
+                    exchange.data.get("temporal_distribution")
+                )
+            except ValueError:
                 raise ValueError(
                     f"Can't understand value for `temporal_distribution` in exchange {exchange}"
                 )
