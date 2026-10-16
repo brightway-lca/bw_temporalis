@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+* Fix loading JSON-serialized temporal distributions in `TemporalisLCA`, as now stored by `bw2data` (see [brightway2-data#296](https://github.com/brightway-lca/brightway2-data/issues/296)). Adds `load_temporal_distribution()`.
+* Fix `loader_registry` key for `FixedTimeOfYearTD` to match the `__loader__` written by `to_json()`
+
 ## [1.2.0] - 2025-07-14
 
 * Compatibility with 64-bit integer indices in recent `bw2data`
