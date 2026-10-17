@@ -235,12 +235,16 @@ class Timeline:
         if flow:
             df = df.loc[self.df["flow"].isin(flow)]
         df.reset_index(drop=True, inplace=True)
-        result_df = pd.concat(
-            [characterization_function(row) for _, row in df.iterrows()]
+        result_df = pd.DataFrame(
+            [characterization_function(row) for row in df.itertuples(index=False)]
         )
         if "date" in result_df.columns:
-            result_df.sort_values(by="date", ascending=True, inplace=True)
-            result_df.reset_index(drop=True, inplace=True)
+            result_df = (
+                result_df.explode(["amount", "date"])
+                .astype({"date": "datetime64[s]", "amount": "float64"})
+                .sort_values(by=["date", "amount"])
+                .reset_index(drop=True)
+            )
         if cumsum and "amount" in result_df:
             result_df["amount_sum"] = result_df["amount"].cumsum()
         return result_df
