@@ -217,7 +217,7 @@ class TemporalDistribution(TemporalDistributionBase):
             {
                 "__loader__": "bw_temporalis.TemporalDistribution",
                 "date_dtype": str(self.date.dtype),
-                "date": self.date.astype(int).tolist(),
+                "date": self.date.astype(np.int64).tolist(),
                 "amount": self.amount.tolist(),
             }
         )
@@ -322,9 +322,9 @@ class FixedTimeOfYearTD(TemporalDistribution):
         self.amount = amount.astype(np.float64)
         self.date = date.astype(timedelta_type)
         self.base_time_type = timedelta_type
-        if not np.all(self.date.astype(int) >= 0):
+        if not np.all(self.date.astype(np.int64) >= 0):
             raise ValueError("Can't have negative relative timedelta64 values")
-        elif not np.all(self.date.astype(int) <= 365 * 24 * 60 * 60):
+        elif not np.all(self.date.astype(np.int64) <= 365 * 24 * 60 * 60):
             raise ValueError("Can't have timedelta64 values more than one year")
 
     def __mul__(
@@ -359,7 +359,7 @@ class FixedTimeOfYearTD(TemporalDistribution):
             {
                 "__loader__": "bw_temporalis.FixedTimeOfYearTD",
                 "date_dtype": str(self.date.dtype),
-                "date": self.date.astype(int).tolist(),
+                "date": self.date.astype(np.int64).tolist(),
                 "amount": self.amount.tolist(),
                 "allow_overlap": self.allow_overlap,
             }
@@ -426,7 +426,7 @@ class FixedTD(TemporalDistribution):
             {
                 "__loader__": "bw_temporalis.FixedTD",
                 "date_dtype": str(self.date.dtype),
-                "date": self.date.astype(int).tolist(),
+                "date": self.date.astype(np.int64).tolist(),
                 "amount": self.amount.tolist(),
             }
         )

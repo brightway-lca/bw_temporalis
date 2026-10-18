@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Fix [#56](https://github.com/brightway-lca/bw_temporalis/issues/56) - Update to the latest Brightway cookiecutter template: packaging metadata moved from `setup.cfg` to `pyproject.toml`, tool configuration consolidated there, and tagged pushes now trigger the PyPI publish workflow
 * Fix [#63](https://github.com/brightway-lca/bw_temporalis/issues/63) - Missing link targets in the README ("file an issue", pip, PyPI)
+* Fix [#67](https://github.com/brightway-lca/bw_temporalis/issues/67) - Integer overflow for dates after 2038 in `easy_datetime_distribution()` and `to_json()` on platforms where `astype(int)` yields a 32-bit integer; now always cast to `np.int64`
 * Fix [#68](https://github.com/brightway-lca/bw_temporalis/issues/68) - Docstrings and comments still described temporal distributions as summing to the exchange amount; they sum to one since 0.6.
 * Fix [#72](https://github.com/brightway-lca/bw_temporalis/issues/72) - `Timeline.sum_days_to_years()` now returns a `year` column (previously `date`, as the rename was discarded), and sums separately for each `flow` and `activity` instead of merging them into the first row's IDs. Callers reading the `date` column must switch to `year`.
 * Fix loading dict-serialized temporal distributions in `load_temporal_distribution()` (see [brightway2-data#296](https://github.com/brightway-lca/brightway2-data/issues/296))

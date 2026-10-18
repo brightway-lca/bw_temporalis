@@ -126,8 +126,8 @@ def easy_datetime_distribution(
             f"`steps` must be a positive number greater than one; got {steps}"
         )
 
-    start = np.array(start, dtype="datetime64[s]").astype(int)
-    end = np.array(end, dtype="datetime64[s]").astype(int)
+    start = np.array(start, dtype="datetime64[s]").astype(np.int64)
+    end = np.array(end, dtype="datetime64[s]").astype(np.int64)
 
     if start >= end:
         raise ValueError(f"Start value is later than end: {start}, {end}")
@@ -136,7 +136,7 @@ def easy_datetime_distribution(
         raise ValueError("Triangular distribution must have at least three steps")
     elif kind == "triangular" and param is not None:
         # Normalize to (0, 1) interval
-        param = (np.array(param, dtype="datetime64[s]").astype(int) - start) / (
+        param = (np.array(param, dtype="datetime64[s]").astype(np.int64) - start) / (
             end - start
         )
         if not 0 <= param <= 1:
