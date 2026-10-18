@@ -27,7 +27,7 @@ on:
   workflow_dispatch: # also allow manual trigger, for testing purposes
 
 jobs:
-  build:
+  testing:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -50,12 +50,13 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
 
       # install testing
-      # Numpy first as it was raising errors on 3.11 (??)
       - name: Install package and test deps
         run: |
-          pip install numpy scipy
           pip install .[testing] # install the package and the testing deps
 
       - name: Test with pytest
         run: |
           pytest
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5

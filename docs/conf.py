@@ -1,3 +1,7 @@
+# conf.py
+# Sphinx configuration file
+# https://www.sphinx-doc.org/en/master/usage/configuration.html
+
 ### import setup ##################################################################################
 
 import datetime
@@ -31,10 +35,18 @@ extensions = [
     "sphinx_copybutton",
 ]
 
+napoleon_numpy_docstring = True
+
 exclude_patterns = ['_build']
 
 # The master toctree document.
 master_doc = 'index'
+
+### intersphinx configuration ######################################################################
+
+intersphinx_mapping = {
+    "bw": ("https://docs.brightway.dev/en/latest/", None),
+}
 
 ### theme configuration ############################################################################
 
@@ -44,7 +56,7 @@ html_show_sphinx = False
 
 html_theme_options = {
     'logo_only': False,
-    'display_version': True,
+    'version_selector': True,
     'prev_next_buttons_location': 'bottom',
     # Toc options
     'collapse_navigation': True,

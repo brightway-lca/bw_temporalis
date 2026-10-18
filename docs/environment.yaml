@@ -1,4 +1,4 @@
-name: sphinx_bw_graph_tools
+name: sphinx_bw_temporalis
 channels:
   - conda-forge
   - nodefaults
