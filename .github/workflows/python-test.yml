@@ -17,7 +17,7 @@ on:
       - ".gitignore"
   pull_request:
     branches: [main, develop]
-    types: [opened, reopened] # excludes syncronize to avoid redundant trigger from commits on PRs
+    types: [opened, reopened, synchronize]
     paths-ignore:
       - "**.md"
       - "**.bib"
