@@ -36,6 +36,9 @@ jobs:
       with:
         repository-url: https://test.pypi.org/legacy/
         skip-existing: true
+        # Both publish steps share dist/; the attestation files this step
+        # writes there make the PyPI step below fail, so only attest once
+        attestations: false
     - name: Publish distribution 📦 to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       if: startsWith(github.ref, 'refs/tags')
