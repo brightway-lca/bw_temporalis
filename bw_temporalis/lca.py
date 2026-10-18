@@ -1,4 +1,3 @@
-import json
 import warnings
 from collections import defaultdict
 from collections.abc import Iterable
@@ -16,6 +15,7 @@ from bw_graph_tools import NewNodeEachVisitGraphTraversal
 
 from .temporal_distribution import TDAware, TemporalDistribution
 from .timeline import Timeline
+from .utils import load_temporal_distribution
 
 
 class MultipleTechnosphereExchanges(Exception):
@@ -223,23 +223,11 @@ You have been warned."""
         col_id: int,
         matrix_label: str,
     ) -> Union[float, TemporalDistribution]:
-        from . import loader_registry
-
         if exchange is NoExchange:
             td = None
         else:
-            td = exchange.data.get("temporal_distribution")
-            if isinstance(td, str) and "__loader__" in td:
-                data = json.loads(td)
-                try:
-                    td = loader_registry[td["__loader__"]](data)
-                except KeyError:
-                    raise KeyError(
-                        "Can't find correct loader {} in `loader_registry`".format(
-                            td["__loader__"]
-                        )
-                    )
-            elif not (isinstance(td, (TemporalDistribution, TDAware)) or td is None):
+            td = load_temporal_distribution(exchange.data.get("temporal_distribution"))
+            if not (isinstance(td, (TemporalDistribution, TDAware)) or td is None):
                 raise ValueError(
                     f"Can't understand value for `temporal_distribution` in exchange {exchange}"
                 )

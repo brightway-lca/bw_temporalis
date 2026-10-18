@@ -6,6 +6,7 @@ __all__ = (
     "FixedTimeOfYearTD",
     "FixedTD",
     "IncongruentDistribution",
+    "load_temporal_distribution",
     "loader_registry",
     "TDAware",
     "TemporalDistribution",
@@ -28,11 +29,13 @@ from .utils import (
     easy_datetime_distribution,
     easy_timedelta_distribution,
     get_version_tuple,
+    load_temporal_distribution,
 )
 
 loader_registry = {
     "bw_temporalis.TemporalDistribution": TemporalDistribution.from_json,
     "bw_temporalis.FixedTimeOfYear": FixedTimeOfYearTD.from_json,
+    "bw_temporalis.FixedTimeOfYearTD": FixedTimeOfYearTD.from_json,
     "bw_temporalis.FixedTD": FixedTD.from_json,
 }
 
