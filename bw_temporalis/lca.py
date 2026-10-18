@@ -11,6 +11,7 @@ from bw2calc import LCA
 from bw2data.backends import ActivityDataset as AD
 from bw2data.backends import Exchange
 from bw2data.backends import ExchangeDataset as ED
+from bw2data.logs import stdout_feedback_logger
 from bw_graph_tools import NewNodeEachVisitGraphTraversal
 
 from .temporal_distribution import TDAware, TemporalDistribution
@@ -111,7 +112,7 @@ class TemporalisLCA:
             self.lca_object.dicts.activity[x] for x in static_activity_indices
         }
 
-        print("Starting graph traversal")
+        stdout_feedback_logger.info("Starting graph traversal")
         gt = graph_traversal.calculate(
             lca_object=lca_object,
             static_activity_indices=static_activity_indices,
@@ -122,7 +123,7 @@ class TemporalisLCA:
             skip_coproducts=skip_coproducts,
             functional_unit_unique_id=functional_unit_unique_id,
         )
-        print("Calculation count:", gt["calculation_count"])
+        stdout_feedback_logger.info(f"Calculation count: {gt['calculation_count']}")
         self.nodes = gt["nodes"]
         self.edges = gt["edges"]
         self.edge_mapping = defaultdict(list)
