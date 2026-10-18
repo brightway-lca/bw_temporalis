@@ -501,3 +501,28 @@ def test_easy_timedelta_distribution_normal():
     assert date_expected.dtype == td.date.dtype
     assert np.allclose(td.date.astype(int), date_expected.astype(int))
     assert np.allclose(td.amount, amount_expected)
+
+
+def test_easy_datetime_distribution_beyond_2038():
+    # Regression test for #67: dates after 2038-01-19 exceed the 32-bit
+    # signed integer range in epoch seconds. Casting with ``astype(int)``
+    # produced int32 on some platforms (Windows with numpy 1.x) and wrapped
+    # 2042-01-01 to a negative number, so ``start >= end`` raised.
+    td = easy_datetime_distribution(start="2026-07-01", end="2042-01-01", steps=5)
+    assert td.date.dtype == np.dtype("datetime64[s]")
+    assert td.date[0] == np.datetime64("2026-07-01", "s")
+    assert td.date[-1] == np.datetime64("2042-01-01", "s")
+    assert np.all(np.diff(td.date).astype(np.int64) > 0)
+    assert np.allclose(td.amount, 0.2)
+
+
+def test_easy_datetime_distribution_triangular_beyond_2038():
+    td = easy_datetime_distribution(
+        start="2030-01-01",
+        end="2050-01-01",
+        steps=5,
+        kind="triangular",
+        param="2040-01-01",
+    )
+    assert td.date[-1] == np.datetime64("2050-01-01", "s")
+    assert td.amount.argmax() == 2

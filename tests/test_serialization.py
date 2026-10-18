@@ -162,3 +162,17 @@ def test_load_temporal_distribution_unknown_loader():
     with pytest.raises(KeyError, match="bw_temporalis.NoSuchTD"):
         load_temporal_distribution(json.dumps({"__loader__": "bw_temporalis.NoSuchTD"}))
 
+
+
+@pytest.mark.parametrize("cls", [TD, FixedTD])
+def test_serialization_absolute_beyond_2038(cls):
+    # Regression test for #67: epoch seconds after 2038 overflow int32, and
+    # ``astype(int)`` could produce int32 on some platforms.
+    td = cls(
+        date=np.array(["2040-01-01", "2050-01-01"], dtype="datetime64[s]"),
+        amount=np.array([0.5, 0.5]),
+    )
+    expected = [2208988800, 2524608000]
+    assert json.loads(td.to_json())["date"] == expected
+    reloaded = load_temporal_distribution(td.to_json())
+    assert np.array_equal(reloaded.date, td.date)
