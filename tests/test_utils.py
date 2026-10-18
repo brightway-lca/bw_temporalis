@@ -4,11 +4,14 @@ import pytest
 from bw2data.tests import bw2test
 
 from bw_temporalis import (
+    FixedTD,
+    FixedTimeOfYearTD,
     IncongruentDistribution,
     TemporalDistribution,
     check_database_exchanges,
     easy_datetime_distribution,
     easy_timedelta_distribution,
+    load_temporal_distribution,
 )
 from bw_temporalis.utils import normalized_data_array
 
@@ -25,61 +28,102 @@ def db():
     return a, b
 
 
-def test_check_database_exchanges(db):
+# Depending on import order, bw2data stores temporal distributions either as objects or
+# as their JSON serialization; ``serialize`` makes sure we always test the JSON form too.
+@pytest.fixture(params=[False, True], ids=["object", "json"])
+def serialize(request):
+    return request.param
+
+
+def make_td(scale, serialize):
+    td = TemporalDistribution(
+        date=np.array([1, 2, 3], dtype="timedelta64[D]"),
+        amount=np.array([1.5, 1.5, 1.5]) / 4.5 * scale,
+    )
+    return td.to_json() if serialize else td
+
+
+def test_check_database_exchanges(db, serialize):
     a, b = db
-    db = bd.Database("test")
     a.new_exchange(
         input=b,
         type="technosphere",
         amount=4.5,
-        temporal_distribution=TemporalDistribution(
-            date=np.array([1, 2, 3], dtype="timedelta64[D]"),
-            amount=np.array([1.5, 1.5, 1.5]) / 4.5,
-        ),
+        temporal_distribution=make_td(1, serialize),
     ).save()
     assert check_database_exchanges("test") is None
 
 
-def test_check_database_exchanges_small_difference_ok(db):
+def test_check_database_exchanges_small_difference_ok(db, serialize):
     a, b = db
     a.new_exchange(
         input=b,
         type="technosphere",
         amount=4.5,
-        temporal_distribution=TemporalDistribution(
-            date=np.array([1, 2, 3], dtype="timedelta64[D]"),
-            amount=np.array([1.5, 1.5, 1.5]) / 4.5 * 0.995,
-        ),
+        temporal_distribution=make_td(0.995, serialize),
     ).save()
     assert check_database_exchanges("test") is None
 
 
-def test_check_database_exchanges_error(db):
-    EXPECTED = """
+def test_check_database_exchanges_error(db, serialize):
+    a, b = db
+    EXPECTED = f"""
     Temporal distribution in exchange doesn't sum to one:
     Input:
         'e' (h, g, None)
-        id: 2
+        id: {b.id}
     Output
         'a' (d, c, None)
-        id: 1
+        id: {a.id}
     Exchange amount: 4.5000e+00
-    Temporal distribution sum: 4.4100e+00
+    Temporal distribution sum: 9.8000e-01
     """
 
-    a, b = db
     a.new_exchange(
         input=b,
         type="technosphere",
         amount=4.5,
-        temporal_distribution=TemporalDistribution(
-            date=np.array([1, 2, 3], dtype="timedelta64[D]"),
-            amount=np.array([1.5, 1.5, 1.5]) / 4.5 * 0.98,
-        ),
+        temporal_distribution=make_td(0.98, serialize),
     ).save()
     with pytest.raises(IncongruentDistribution) as exc:
         check_database_exchanges("test")
-        assert str(exc.value) == EXPECTED
+    assert str(exc.value) == EXPECTED
+
+
+@pytest.mark.parametrize(
+    "td",
+    [
+        TemporalDistribution(
+            date=np.array([1, 2], dtype="timedelta64[s]"), amount=np.array([0.5, 0.5])
+        ),
+        FixedTD(
+            date=np.array([1, 2], dtype="timedelta64[s]"), amount=np.array([0.5, 0.5])
+        ),
+        FixedTimeOfYearTD(
+            date=np.array([1, 2], dtype="timedelta64[s]"), amount=np.array([0.5, 0.5])
+        ),
+    ],
+    ids=lambda td: type(td).__name__,
+)
+def test_load_temporal_distribution_roundtrip(td):
+    given = load_temporal_distribution(td.to_json())
+    assert type(given) is type(td)
+    assert np.array_equal(given.date, td.date)
+    assert np.array_equal(given.amount, td.amount)
+
+
+def test_load_temporal_distribution_passthrough():
+    td = TemporalDistribution(
+        date=np.array([1, 2], dtype="timedelta64[s]"), amount=np.array([0.5, 0.5])
+    )
+    assert load_temporal_distribution(td) is td
+    assert load_temporal_distribution(None) is None
+    assert load_temporal_distribution("foo") == "foo"
+
+
+def test_load_temporal_distribution_unknown_loader():
+    with pytest.raises(KeyError, match="nope"):
+        load_temporal_distribution('{"__loader__": "nope"}')
 
 
 def test_normalized_data_array_invalid_kind():

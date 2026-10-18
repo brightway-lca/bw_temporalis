@@ -1,4 +1,5 @@
 import importlib.metadata
+import json
 import math
 import warnings
 from numbers import Number
@@ -11,6 +12,27 @@ from scipy.stats import norm, triang
 from tqdm import tqdm
 
 from .temporal_distribution import TemporalDistribution
+
+
+def load_temporal_distribution(value):
+    """Deserialize ``value`` if it is a JSON string with a ``__loader__``, otherwise return it unchanged.
+
+    Depending on import order, ``bw2data`` stores edge temporal distributions either as
+    Python objects or as their ``.to_json()`` serialization, so we need to handle both."""
+    from . import loader_registry
+
+    if isinstance(value, str) and "__loader__" in value:
+        data = json.loads(value)
+        try:
+            loader = loader_registry[data["__loader__"]]
+        except KeyError:
+            raise KeyError(
+                "Can't find correct loader {} in `loader_registry`".format(
+                    data["__loader__"]
+                )
+            )
+        return loader(data)
+    return value
 
 
 class IncongruentDistribution(Exception):
@@ -232,10 +254,11 @@ def check_database_exchanges(database_label: str) -> None:
     """
     for ds in tqdm(bd.Database(database_label)):
         for exc in ds.exchanges():
+            td = load_temporal_distribution(exc.get("temporal_distribution"))
             # Can't really evaluate callable temporal distributions, they are
             # responsible for summing to the exchange amount on their own.
-            if isinstance(exc.get("temporal_distribution"), TemporalDistribution):
-                a, b = exc["amount"], exc["temporal_distribution"].amount.sum()
+            if isinstance(td, TemporalDistribution):
+                a, b = exc["amount"], td.amount.sum()
                 if not math.isclose(1, b, rel_tol=0.01):
                     raise IncongruentDistribution(
                         MESSAGE.format(

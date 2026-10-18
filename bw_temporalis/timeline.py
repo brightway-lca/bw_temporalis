@@ -311,7 +311,6 @@ class Timeline:
             [bd.Database(label).nodes_to_dataframe() for label in database_labels]
         )
         db.drop(
-            axis=1,
             columns=[label for label in db.columns if label not in ["id"] + fields],
             inplace=True,
         )
@@ -322,7 +321,6 @@ class Timeline:
             process_db, how="left", left_on="activity", right_on="id", validate="m:1"
         )
         df.drop(
-            axis=1,
             columns=["id"],
             inplace=True,
         )
@@ -333,7 +331,6 @@ class Timeline:
             flow_db, how="left", left_on="flow", right_on="id", validate="m:1"
         )
         df.drop(
-            axis=1,
             columns=["id"],
             inplace=True,
         )

@@ -16,6 +16,8 @@ def consolidate(
     # with two timedelta64 arrays. Instead of checking we just always offset (still fast).
     # Choose one million years as a reasonable offset (native resolution is seconds)
     # 1_000_000 * 60 * 60 * 24 * 365 = 31536000000000
+    # Cast so that adding OFFSET can't overflow smaller integer dtypes (NEP 50)
+    indices = indices.astype(np.int64, copy=False)
     matrix = csr_array(
         (amounts, (np.zeros_like(indices), indices + OFFSET)),
         shape=(1, indices.max() + OFFSET + 1),
