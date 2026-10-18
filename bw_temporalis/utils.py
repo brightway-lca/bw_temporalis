@@ -2,6 +2,7 @@ import importlib.metadata
 import json
 import math
 import warnings
+from collections.abc import Mapping
 from numbers import Number
 from typing import Union
 
@@ -15,14 +16,16 @@ from .temporal_distribution import TemporalDistribution
 
 
 def load_temporal_distribution(value):
-    """Deserialize ``value`` if it is a JSON string with a ``__loader__``, otherwise return it unchanged.
+    """Deserialize ``value`` if it is a JSON string or dict with a ``__loader__``, otherwise return it unchanged.
 
     Depending on import order, ``bw2data`` stores edge temporal distributions either as
     Python objects or as their ``.to_json()`` serialization, so we need to handle both."""
     from . import loader_registry
 
     if isinstance(value, str) and "__loader__" in value:
-        data = json.loads(value)
+        value = json.loads(value)
+    if isinstance(value, Mapping) and "__loader__" in value:
+        data = value
         try:
             loader = loader_registry[data["__loader__"]]
         except KeyError:

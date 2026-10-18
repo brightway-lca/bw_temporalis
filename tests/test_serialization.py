@@ -3,7 +3,13 @@ import json
 import numpy as np
 import pytest
 
-from bw_temporalis import easy_datetime_distribution, easy_timedelta_distribution
+from bw_temporalis import (
+    FixedTD,
+    FixedTimeOfYearTD,
+    easy_datetime_distribution,
+    easy_timedelta_distribution,
+    load_temporal_distribution,
+)
 from bw_temporalis.temporal_distribution import TemporalDistribution as TD
 
 
@@ -122,3 +128,37 @@ def test_deserialization_already_loaded():
 def test_deserialization_wrong_type():
     with pytest.raises(ValueError):
         TD.from_json({"a", "b", "c"})
+
+
+@pytest.mark.parametrize("as_string", [True, False])
+@pytest.mark.parametrize(
+    "td",
+    [
+        TD(date=np.array([0, 5], dtype="timedelta64[Y]"), amount=np.array([0.6, 0.4])),
+        FixedTD(
+            date=np.array(["2020-01-01", "2021-01-01"], dtype="datetime64[D]"),
+            amount=np.array([0.5, 0.5]),
+        ),
+        FixedTimeOfYearTD(
+            date=np.array([10, 20], dtype="timedelta64[D]"), amount=np.array([0.5, 0.5])
+        ),
+    ],
+)
+def test_load_temporal_distribution_json(td, as_string):
+    value = td.to_json() if as_string else json.loads(td.to_json())
+    loaded = load_temporal_distribution(value)
+    assert type(loaded) is type(td)
+    assert np.array_equal(loaded.date, td.date)
+    assert np.array_equal(loaded.amount, td.amount)
+
+
+def test_load_temporal_distribution_passthrough():
+    td = TD(date=np.array([0, 5], dtype="timedelta64[Y]"), amount=np.array([0.6, 0.4]))
+    assert load_temporal_distribution(td) is td
+    assert load_temporal_distribution(None) is None
+
+
+def test_load_temporal_distribution_unknown_loader():
+    with pytest.raises(KeyError, match="bw_temporalis.NoSuchTD"):
+        load_temporal_distribution(json.dumps({"__loader__": "bw_temporalis.NoSuchTD"}))
+

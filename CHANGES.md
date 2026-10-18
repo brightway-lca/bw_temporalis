@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 * Fix [#68](https://github.com/brightway-lca/bw_temporalis/issues/68) - Docstrings and comments still described temporal distributions as summing to the exchange amount; they sum to one since 0.6.
+* Fix loading dict-serialized temporal distributions in `load_temporal_distribution()` (see [brightway2-data#296](https://github.com/brightway-lca/brightway2-data/issues/296))
 
 ## [1.2.0] - 2025-07-14
 
