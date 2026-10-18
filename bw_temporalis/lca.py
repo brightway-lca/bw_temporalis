@@ -43,7 +43,7 @@ class TemporalisLCA:
 
     Temporal distribution times must always have the data type `timedelta64[s]`. Not all edges need to have temporal distributions.
 
-    Temporal distributions are **not density functions** - their values should sum to the exchange amount.
+    Temporal distributions are **not density functions** - their values are fractions of the exchange amount, and should sum to one. The exchange amount is applied during the calculation, so a distribution that sums to the exchange amount would be scaled by the amount twice. You can check a database with `check_database_exchanges`.
 
     As graph traversal is much slower than matrix calculations, we can limit which nodes get traversed in several ways:
 

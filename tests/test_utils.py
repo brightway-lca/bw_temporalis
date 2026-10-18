@@ -126,6 +126,19 @@ def test_load_temporal_distribution_unknown_loader():
         load_temporal_distribution('{"__loader__": "nope"}')
 
 
+def test_check_database_exchanges_sums_to_exchange_amount_error(db, serialize):
+    """A distribution that sums to the exchange amount instead of one is rejected."""
+    a, b = db
+    a.new_exchange(
+        input=b,
+        type="technosphere",
+        amount=4.5,
+        temporal_distribution=make_td(4.5, serialize),
+    ).save()
+    with pytest.raises(IncongruentDistribution):
+        check_database_exchanges("test")
+
+
 def test_normalized_data_array_invalid_kind():
     with pytest.raises(ValueError):
         normalized_data_array(10, "foo", None)
