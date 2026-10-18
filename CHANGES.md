@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* Fix [#56](https://github.com/brightway-lca/bw_temporalis/issues/56) - Update to the latest Brightway cookiecutter template: packaging metadata moved from `setup.cfg` to `pyproject.toml`, tool configuration consolidated there, and tagged pushes now trigger the PyPI publish workflow
 * Fix [#63](https://github.com/brightway-lca/bw_temporalis/issues/63) - Missing link targets in the README ("file an issue", pip, PyPI)
 * Fix [#68](https://github.com/brightway-lca/bw_temporalis/issues/68) - Docstrings and comments still described temporal distributions as summing to the exchange amount; they sum to one since 0.6.
 * Fix [#72](https://github.com/brightway-lca/bw_temporalis/issues/72) - `Timeline.sum_days_to_years()` now returns a `year` column (previously `date`, as the rename was discarded), and sums separately for each `flow` and `activity` instead of merging them into the first row's IDs. Callers reading the `date` column must switch to `year`.
