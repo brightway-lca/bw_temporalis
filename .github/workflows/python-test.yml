@@ -17,7 +17,7 @@ on:
       - ".gitignore"
   pull_request:
     branches: [main, develop]
-    types: [opened, reopened] # excludes syncronize to avoid redundant trigger from commits on PRs
+    types: [opened, reopened, synchronize]
     paths-ignore:
       - "**.md"
       - "**.bib"
@@ -33,7 +33,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        py-version: ["3.10"] # 3.11 build of scikit-network is broken
+        py-version: ["3.10", "3.14"]
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
