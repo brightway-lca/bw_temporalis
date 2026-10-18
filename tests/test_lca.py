@@ -10,6 +10,8 @@ from bw_temporalis import TemporalDistribution as TD
 from bw_temporalis import TemporalisLCA, easy_timedelta_distribution
 from bw_temporalis.lca import MultipleTechnosphereExchanges
 
+NAMES = ("CO2", "CH4", "A", "B", "C", "D")
+
 
 @pytest.fixture
 @bw2test
@@ -85,6 +87,8 @@ def basic_db():
 
 
 def test_temporalis_lca(basic_db):
+    ids = {code: bd.get_id(("db", code)) for code in NAMES}
+
     lca = LCA({("db", "A"): 2}, ("m",))
     lca.lci()
     lca.lcia()
@@ -98,28 +102,28 @@ def test_temporalis_lca(basic_db):
 
     expected_flows = [
         {
-            "flow_datapackage_id": 2,  # CH4
+            "flow_datapackage_id": ids["CH4"],
             "flow_index": 1,
             "activity_unique_id": 2,
-            "activity_id": 5,
+            "activity_id": ids["C"],
             "activity_index": 2,
             "amount": 10,
             "score": 250,
         },
         {
-            "flow_datapackage_id": 1,
+            "flow_datapackage_id": ids["CO2"],
             "flow_index": 0,
             "activity_unique_id": 1,
-            "activity_id": 4,
+            "activity_id": ids["B"],
             "activity_index": 1,
             "amount": 80,
             "score": 80,
         },
         {
-            "flow_datapackage_id": 1,
+            "flow_datapackage_id": ids["CO2"],
             "flow_index": 0,
             "activity_unique_id": 3,
-            "activity_id": 6,
+            "activity_id": ids["D"],
             "activity_index": 3,
             "amount": 80,
             "score": 80,
@@ -145,9 +149,9 @@ def test_temporalis_lca(basic_db):
         },
         {
             "unique_id": 0,
-            "activity_datapackage_id": 3,
+            "activity_datapackage_id": ids["A"],
             "activity_index": 0,
-            "reference_product_datapackage_id": 3,
+            "reference_product_datapackage_id": ids["A"],
             "reference_product_index": 0,
             "reference_product_production_amount": 1,
             "supply_amount": 2,
@@ -156,9 +160,9 @@ def test_temporalis_lca(basic_db):
         },
         {
             "unique_id": 1,
-            "activity_datapackage_id": 4,
+            "activity_datapackage_id": ids["B"],
             "activity_index": 1,
-            "reference_product_datapackage_id": 4,
+            "reference_product_datapackage_id": ids["B"],
             "reference_product_index": 1,
             "reference_product_production_amount": 1,
             "supply_amount": 10,
@@ -167,9 +171,9 @@ def test_temporalis_lca(basic_db):
         },
         {
             "unique_id": 2,
-            "activity_datapackage_id": 5,
+            "activity_datapackage_id": ids["C"],
             "activity_index": 2,
-            "reference_product_datapackage_id": 5,
+            "reference_product_datapackage_id": ids["C"],
             "reference_product_index": 2,
             "reference_product_production_amount": 1,
             "supply_amount": 20,
@@ -178,9 +182,9 @@ def test_temporalis_lca(basic_db):
         },
         {
             "unique_id": 3,
-            "activity_datapackage_id": 6,
+            "activity_datapackage_id": ids["D"],
             "activity_index": 3,
-            "reference_product_datapackage_id": 6,
+            "reference_product_datapackage_id": ids["D"],
             "reference_product_index": 3,
             "reference_product_production_amount": 1,
             "supply_amount": 40,
@@ -237,16 +241,16 @@ def test_temporalis_lca(basic_db):
             ),
             "flow": np.hstack(
                 [
-                    np.ones_like((start * (a_td * b_td)).amount),
-                    np.ones_like((start * (a_td * d_td)).amount),
-                    2 * np.ones_like((start * a_td).amount),
+                    np.full_like((start * (a_td * b_td)).amount, ids["CO2"], dtype=int),
+                    np.full_like((start * (a_td * d_td)).amount, ids["CO2"], dtype=int),
+                    np.full_like((start * a_td).amount, ids["CH4"], dtype=int),
                 ]
             ).astype(int),
             "activity": np.hstack(
                 [
-                    4 * np.ones_like((start * (a_td * b_td)).amount),
-                    6 * np.ones_like((start * (a_td * d_td)).amount),
-                    5 * np.ones_like((start * a_td).amount),
+                    np.full_like((start * (a_td * b_td)).amount, ids["B"], dtype=int),
+                    np.full_like((start * (a_td * d_td)).amount, ids["D"], dtype=int),
+                    np.full_like((start * a_td).amount, ids["C"], dtype=int),
                 ]
             ).astype(int),
         }
@@ -262,13 +266,6 @@ def test_temporalis_static_indices_correct_lookup():
     bd.projects.set_current("__test_fixture__")
 
     db = bd.Database("db")
-    # Push indices forward
-    bd.Database("fake").write(
-        {
-            ("fake", str(x)): {"type": "process", "exchanges": [], "name": "foo"}
-            for x in range(1000)
-        }
-    )
     db.write(
         {
             ("db", "CO2"): {
@@ -338,8 +335,9 @@ def test_temporalis_static_indices_correct_lookup():
 
     assert lca.score == 410
 
-    static_indices = {x.id for x in db if x.get("type", "process") == "process"}
-    assert min(static_indices) > 500
+    # Database IDs, not matrix indices; these must be translated by ``TemporalisLCA``
+    static_indices = {x.id for x in db if x["type"] in bd.labels.process_node_types}
+    assert static_indices == {bd.get_id(("db", code)) for code in "ABCD"}
 
     tlca = TemporalisLCA(
         lca_object=lca,
@@ -425,6 +423,8 @@ def test_temporalis_lca_node_timeline(basic_db):
 
 
 def test_temporalis_lca_draw_from_matrix(basic_db):
+    ids = {code: bd.get_id(("db", code)) for code in NAMES}
+
     lca = LCA({("db", "A"): 2}, ("m",))
     lca.lci()
     lca.lcia()
@@ -444,28 +444,28 @@ def test_temporalis_lca_draw_from_matrix(basic_db):
 
     expected_flows = [
         {
-            "flow_datapackage_id": 2,  # CH4
+            "flow_datapackage_id": ids["CH4"],
             "flow_index": 1,
             "activity_unique_id": 2,
-            "activity_id": 5,
+            "activity_id": ids["C"],
             "activity_index": 2,
             "amount": 20,
             "score": 500,
         },
         {
-            "flow_datapackage_id": 1,
+            "flow_datapackage_id": ids["CO2"],
             "flow_index": 0,
             "activity_unique_id": 1,
-            "activity_id": 4,
+            "activity_id": ids["B"],
             "activity_index": 1,
             "amount": 160,
             "score": 160,
         },
         {
-            "flow_datapackage_id": 1,
+            "flow_datapackage_id": ids["CO2"],
             "flow_index": 0,
             "activity_unique_id": 3,
-            "activity_id": 6,
+            "activity_id": ids["D"],
             "activity_index": 3,
             "amount": 160,
             "score": 160,
@@ -491,9 +491,9 @@ def test_temporalis_lca_draw_from_matrix(basic_db):
         },
         {
             "unique_id": 0,
-            "activity_datapackage_id": 3,
+            "activity_datapackage_id": ids["A"],
             "activity_index": 0,
-            "reference_product_datapackage_id": 3,
+            "reference_product_datapackage_id": ids["A"],
             "reference_product_index": 0,
             "reference_product_production_amount": 1,
             "supply_amount": 2,
@@ -502,9 +502,9 @@ def test_temporalis_lca_draw_from_matrix(basic_db):
         },
         {
             "unique_id": 1,
-            "activity_datapackage_id": 4,
+            "activity_datapackage_id": ids["B"],
             "activity_index": 1,
-            "reference_product_datapackage_id": 4,
+            "reference_product_datapackage_id": ids["B"],
             "reference_product_index": 1,
             "reference_product_production_amount": 1,
             "supply_amount": 20,
@@ -513,9 +513,9 @@ def test_temporalis_lca_draw_from_matrix(basic_db):
         },
         {
             "unique_id": 2,
-            "activity_datapackage_id": 5,
+            "activity_datapackage_id": ids["C"],
             "activity_index": 2,
-            "reference_product_datapackage_id": 5,
+            "reference_product_datapackage_id": ids["C"],
             "reference_product_index": 2,
             "reference_product_production_amount": 1,
             "supply_amount": 40,
@@ -524,9 +524,9 @@ def test_temporalis_lca_draw_from_matrix(basic_db):
         },
         {
             "unique_id": 3,
-            "activity_datapackage_id": 6,
+            "activity_datapackage_id": ids["D"],
             "activity_index": 3,
-            "reference_product_datapackage_id": 6,
+            "reference_product_datapackage_id": ids["D"],
             "reference_product_index": 3,
             "reference_product_production_amount": 1,
             "supply_amount": 80,
@@ -547,7 +547,7 @@ def test_lca_provide_static_activity_indices(basic_db):
     TemporalisLCA(
         lca_object=lca,
         static_activity_indices=[
-            x.id for x in basic_db if x.get("type", "process") == "process"
+            x.id for x in basic_db if x["type"] in bd.labels.process_node_types
         ][:2],
     )
     with pytest.raises(TypeError):
