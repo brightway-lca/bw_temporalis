@@ -257,3 +257,38 @@ def test_add_metadata_to_dataframe():
     assert df[df.activity == B].activity_unit.unique() == "Pfenning"
     assert np.isnan(df[df.activity == B].activity_categories.unique()[0])
     assert np.isnan(df[df.activity == B].activity_weird.unique()[0])
+
+
+def test_sum_days_to_years_missing_dataframe():
+    with pytest.raises(ValueError):
+        Timeline().sum_days_to_years()
+
+
+def test_sum_days_to_years():
+    tl = Timeline()
+    tl.df = pd.DataFrame(
+        {
+            "date": pd.Series(
+                [
+                    "2020-12-20",
+                    "2020-12-15",
+                    "2020-03-01",
+                    "2022-05-25",
+                    "2022-05-26",
+                ],
+                dtype="datetime64[s]",
+            ),
+            "amount": [10.0, 20.0, 5.0, 50.0, 49.0],
+            "flow": [1, 1, 3, 3, 3],
+            "activity": [2, 2, 2, 4, 4],
+        }
+    )
+    expected = pd.DataFrame(
+        {
+            "year": [2020, 2020, 2022],
+            "amount": [30.0, 5.0, 99.0],
+            "flow": [1, 3, 3],
+            "activity": [2, 2, 4],
+        }
+    )
+    pd.testing.assert_frame_equal(tl.sum_days_to_years(), expected, check_dtype=False)

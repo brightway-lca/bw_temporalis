@@ -247,7 +247,8 @@ class Timeline:
 
     def sum_days_to_years(self) -> pd.DataFrame:
         """
-        Sums the day-resolution `amount` of the Timeline Pandas DataFrame to years.
+        Sums the day-resolution `amount` of the Timeline Pandas DataFrame to years,
+        separately for each combination of `flow` and `activity`.
 
         An input Timeline of the form
 
@@ -279,12 +280,13 @@ class Timeline:
             raise ValueError("Call `.build_dataframe()` first")
 
         result_df = (
-            self.df.groupby([self.df["date"].dt.year])
-            .agg({"amount": "sum", "flow": "first", "activity": "first"})
+            self.df.groupby(
+                [self.df["date"].dt.year.rename("year"), "flow", "activity"]
+            )["amount"]
+            .sum()
             .reset_index()
         )
-
-        result_df.rename(columns={"date": "year"})
+        result_df = result_df[["year", "amount", "flow", "activity"]]
 
         return result_df
 
