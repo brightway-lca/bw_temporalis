@@ -58,5 +58,8 @@ please [file an issue] along with a detailed description.
 <!-- github-only -->
 
 [command-line reference]: https://bw_temporalis.readthedocs.io/en/latest/usage.html
+[file an issue]: https://github.com/brightway-lca/bw_temporalis/issues
+[pip]: https://pip.pypa.io/
+[pypi]: https://pypi.org/project/bw_temporalis/
 [license]: https://github.com/brightway-lca/bw_temporalis/blob/main/LICENSE
 [contributor guide]: https://github.com/brightway-lca/bw_temporalis/blob/main/CONTRIBUTING.md
