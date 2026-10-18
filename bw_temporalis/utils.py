@@ -36,7 +36,7 @@ def load_temporal_distribution(value):
 
 
 class IncongruentDistribution(Exception):
-    """The sum of `TemporalDistribution` values is different than the exchange"""
+    """The sum of `TemporalDistribution` values is not one"""
 
     pass
 
@@ -228,12 +228,14 @@ def easy_timedelta_distribution(
 
 
 def check_database_exchanges(database_label: str) -> None:
-    """Check the sum of an exchange ``TemporalDistribution.amount`` is close to its ``amount`` value.
+    """Check that the sum of each exchange ``TemporalDistribution.amount`` is close to one.
+
+    Temporal distribution amounts are fractions of the exchange amount; the exchange amount itself is applied during the calculation.
 
     Raises
     ------
     IncongruentDistribution
-        If the two values are more than 1 percent different
+        If the sum differs from one by more than 1 percent
 
     Parameters
     ----------
@@ -256,7 +258,7 @@ def check_database_exchanges(database_label: str) -> None:
         for exc in ds.exchanges():
             td = load_temporal_distribution(exc.get("temporal_distribution"))
             # Can't really evaluate callable temporal distributions, they are
-            # responsible for summing to the exchange amount on their own.
+            # responsible for summing to one on their own.
             if isinstance(td, TemporalDistribution):
                 a, b = exc["amount"], td.amount.sum()
                 if not math.isclose(1, b, rel_tol=0.01):

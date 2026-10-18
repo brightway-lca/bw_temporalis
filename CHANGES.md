@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+* Fix [#68](https://github.com/brightway-lca/bw_temporalis/issues/68) - Docstrings and comments still described temporal distributions as summing to the exchange amount; they sum to one since 0.6.
+
 ## [1.2.0] - 2025-07-14
 
 * Compatibility with 64-bit integer indices in recent `bw2data`
