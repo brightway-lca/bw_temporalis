@@ -554,13 +554,16 @@ def test_lca_provide_static_activity_indices(basic_db):
         TemporalisLCA(lca_object=lca, static_activity_indices=1001)
 
 def test_temporalis_lca_json_temporal_distribution(basic_db):
-    # bw2data stores edge TDs as JSON strings when ``bw_temporalis`` is imported first
+    # bw2data stores edge TDs as JSON strings (always since bw2data#296, before only when
+    # ``bw_temporalis`` was imported first)
     for exc in bd.get_node(code="B").biosphere():
         exc["temporal_distribution"] = exc["temporal_distribution"].to_json()
         exc.save()
-    assert isinstance(
-        next(iter(bd.get_node(code="B").biosphere()))["temporal_distribution"], str
-    )
+    # Check the stored value, as newer ``bw2data`` restores TD objects when loading an ``Exchange``
+    ED = bd.backends.ExchangeDataset
+    stored = ED.select().where(ED.output_code == "B", ED.type == "biosphere")
+    assert stored.count()
+    assert all(isinstance(ed.data["temporal_distribution"], str) for ed in stored)
 
     lca = LCA({("db", "A"): 2}, ("m",))
     lca.lci()
