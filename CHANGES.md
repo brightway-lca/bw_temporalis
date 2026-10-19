@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.1] - 2026-10-18
 
+* Raise the minimum `bw2data` version to 4.8, which always stores temporal distributions as JSON and restores them when loading an `Exchange` ([brightway2-data#296](https://github.com/brightway-lca/brightway2-data/issues/296))
 * Check the stored temporal distribution value in `test_temporalis_lca_json_temporal_distribution`, so the test passes with `bw2data` versions that restore temporal distribution objects when loading an `Exchange` ([#81](https://github.com/brightway-lca/bw_temporalis/pull/81), [brightway2-data#296](https://github.com/brightway-lca/brightway2-data/issues/296))
 
 ## [1.3.0] - 2026-10-18
