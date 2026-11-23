@@ -21,11 +21,17 @@ def load_temporal_distribution(value):
     Depending on its version, ``bw2data`` returns edge temporal distributions as Python
     objects, as their ``.to_json()`` serialization, or as a tagged value which
     ``bw2data.codec`` couldn't restore because the class isn't defined in this process (see
-    ``bw_temporalis.codec``), so we need to handle all three."""
+    ``bw_temporalis.codec``), so we need to handle all three.
+
+    A tagged value is restored with the loader registered in ``loader_registry`` for its
+    tag, if there is one, and otherwise with the loader for its ``__loader__``. A subclass
+    which inherits ``to_json`` writes the ``__loader__`` of its parent, so in that case the
+    value is restored as the parent class, with a warning."""
     from . import loader_registry
 
     if isinstance(value, str) and "__loader__" in value:
         value = json.loads(value)
+    tag = None
     if (
         isinstance(value, Mapping)
         and "__bw__" in value
@@ -34,18 +40,31 @@ def load_temporal_distribution(value):
     ):
         # Tagged value stored by ``bw2data.codec`` whose class isn't defined in this
         # process; see ``bw_temporalis.codec``
-        value = value["v"]
+        tag, value = value["__bw__"], value["v"]
+        if tag in loader_registry:
+            return loader_registry[tag](value)
     if isinstance(value, Mapping) and "__loader__" in value:
-        data = value
+        name = value["__loader__"]
         try:
-            loader = loader_registry[data["__loader__"]]
+            loader = loader_registry[name]
         except KeyError:
+            if tag is None:
+                raise KeyError(f"Can't find correct loader {name} in `loader_registry`")
             raise KeyError(
-                "Can't find correct loader {} in `loader_registry`".format(
-                    data["__loader__"]
-                )
+                f"Can't find correct loader {name} in `loader_registry` for a value stored "
+                f"as `{tag}`, a class which isn't defined in this process. Import the module "
+                f"which defines it, or add a loader for `{tag}` or `{name}` to "
+                "`bw_temporalis.loader_registry`."
             )
-        return loader(data)
+        if tag is not None and tag != name and name.startswith("bw_temporalis."):
+            # A subclass which inherits ``to_json`` writes the ``__loader__`` of its parent
+            warnings.warn(
+                f"Temporal distribution stored as `{tag}`, a class which isn't defined in "
+                f"this process, is restored with the loader `{name}`, and won't have the "
+                f"behaviour of `{tag}`. Import the module which defines that class, or add a "
+                f"loader for `{tag}` to `bw_temporalis.loader_registry`."
+            )
+        return loader(value)
     return value
 
 
