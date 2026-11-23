@@ -27,7 +27,17 @@ RESOLUTION_LABELS = {
 
 
 class TDAware:
-    """Base class for functions which can be multiplied by temporal distributions"""
+    """Base class for functions which can be multiplied by temporal distributions.
+
+    Subclasses with ``to_json`` and ``from_json`` methods can be stored on ``bw2data``
+    exchanges; see ``bw_temporalis.codec``."""
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        # Lets bw2data store instances on exchanges; see ``bw_temporalis.codec``
+        from .codec import register_class
+
+        register_class(cls)
 
     def __mul__(self, other):
         raise NotImplementedError("Must be defined in child classes")
@@ -35,6 +45,13 @@ class TDAware:
 
 class TemporalDistributionBase:
     """Base class for temporal distributions"""
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        # Lets bw2data store instances on exchanges; see ``bw_temporalis.codec``
+        from .codec import register_class
+
+        register_class(cls)
 
     _mul_comes_first = False  # Base class doesn't care about order
 
