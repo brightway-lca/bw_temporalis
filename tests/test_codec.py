@@ -83,9 +83,11 @@ class Doubler(TDAware):
 
 
 def test_user_subclass_registers_itself():
-    assert tag(Doubler) == "test_codec.Doubler"
+    # The module name depends on how pytest imports the tests
+    expected = f"{Doubler.__module__}.Doubler"
+    assert tag(Doubler) == expected
     stored = codec.dumps({"temporal_distribution": Doubler(3)})
-    assert json.loads(stored)["temporal_distribution"]["__bw__"] == "test_codec.Doubler"
+    assert json.loads(stored)["temporal_distribution"]["__bw__"] == expected
     loaded = codec.loads(stored)["temporal_distribution"]
     assert type(loaded) is Doubler and loaded.factor == 3
 
@@ -126,10 +128,39 @@ def test_class_without_json_methods_is_not_registered():
 
 def test_value_of_undefined_class_is_restored_with_loader_registry(monkeypatch):
     # Stored by a process where the class was defined, read where it isn't
-    monkeypatch.setattr(codec, "_entry_points_loaded", True)
     stored = b'{"td": {"__bw__": "some_module.Gone", "v": {"__loader__": "tests.Doubler", "factor": 5}}}'
     value = codec.loads(stored)["td"]
     assert type(value) is codec.UnknownTaggedValue
     monkeypatch.setitem(bw_temporalis.loader_registry, "tests.Doubler", Doubler.from_json)
     restored = load_temporal_distribution(value)
     assert type(restored) is Doubler and restored.factor == 5
+
+
+def test_loader_registered_for_the_tag_is_preferred(monkeypatch):
+    stored = b'{"td": {"__bw__": "some_module.Gone", "v": {"__loader__": "tests.Other", "factor": 5}}}'
+    monkeypatch.setitem(bw_temporalis.loader_registry, "some_module.Gone", Doubler.from_json)
+    restored = load_temporal_distribution(codec.loads(stored)["td"])
+    assert type(restored) is Doubler and restored.factor == 5
+
+
+def test_value_of_undefined_subclass_is_restored_as_parent_with_warning():
+    # A subclass which inherits ``to_json`` writes the ``__loader__`` of its parent
+    payload = json.loads(TDS[1].to_json())
+    value = codec.loads(json.dumps({"__bw__": "some_module.MyFixed", "v": payload}))
+    assert type(value) is codec.UnknownTaggedValue
+    with pytest.warns(UserWarning, match="some_module.MyFixed"):
+        restored = load_temporal_distribution(value)
+    _same(restored, TDS[1])
+
+
+def test_value_of_undefined_class_without_loader_names_the_tag():
+    value = codec.loads(b'{"__bw__": "some_module.Gone", "v": {"__loader__": "tests.Nope"}}')
+    with pytest.raises(KeyError, match="some_module.Gone"):
+        load_temporal_distribution(value)
+
+
+def test_legacy_loader_name_as_tag():
+    # ``to_json`` never wrote this name, but it is in ``loader_registry``
+    payload = json.loads(TDS[2].to_json()) | {"__loader__": "bw_temporalis.FixedTimeOfYear"}
+    value = codec.loads(json.dumps({"__bw__": "bw_temporalis.FixedTimeOfYear", "v": payload}))
+    _same(load_temporal_distribution(value), TDS[2])
