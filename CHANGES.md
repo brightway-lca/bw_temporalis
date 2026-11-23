@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+* Register temporal distributions with `bw2data.codec`, so that `bw2data` versions which store exchange data as tagged JSON instead of pickles can store and read them. Every subclass of `TemporalDistributionBase` and `TDAware` with `to_json` and `from_json` methods registers itself when it is defined, including subclasses defined by users; a class defined again under the same name (e.g. in a notebook) replaces the earlier one. The tag is `"bw_temporalis.<class name>"` for the classes of this package and `"<module>.<qualified class name>"` for others, and the stored value is the dict written by `to_json()`. `bw2data` loads the new `bw2data.codec` entry point (`bw_temporalis.codec.register`) when it first needs it. A stored value whose class isn't defined in the reading process is restored by `load_temporal_distribution` through `loader_registry`. Nothing changes with `bw2data` versions without `bw2data.codec`.
+
 ## [1.3.1] - 2026-10-18
 
 * Raise the minimum `bw2data` version to 4.8, which always stores temporal distributions as JSON and restores them when loading an `Exchange` ([brightway2-data#296](https://github.com/brightway-lca/brightway2-data/issues/296))

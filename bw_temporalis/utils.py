@@ -18,12 +18,23 @@ from .temporal_distribution import TemporalDistribution
 def load_temporal_distribution(value):
     """Deserialize ``value`` if it is a JSON string or dict with a ``__loader__``, otherwise return it unchanged.
 
-    Depending on import order, ``bw2data`` stores edge temporal distributions either as
-    Python objects or as their ``.to_json()`` serialization, so we need to handle both."""
+    Depending on its version, ``bw2data`` returns edge temporal distributions as Python
+    objects, as their ``.to_json()`` serialization, or as a tagged value which
+    ``bw2data.codec`` couldn't restore because the class isn't defined in this process (see
+    ``bw_temporalis.codec``), so we need to handle all three."""
     from . import loader_registry
 
     if isinstance(value, str) and "__loader__" in value:
         value = json.loads(value)
+    if (
+        isinstance(value, Mapping)
+        and "__bw__" in value
+        and isinstance(value.get("v"), Mapping)
+        and "__loader__" in value["v"]
+    ):
+        # Tagged value stored by ``bw2data.codec`` whose class isn't defined in this
+        # process; see ``bw_temporalis.codec``
+        value = value["v"]
     if isinstance(value, Mapping) and "__loader__" in value:
         data = value
         try:

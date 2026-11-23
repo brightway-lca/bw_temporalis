@@ -42,6 +42,10 @@ dependencies = [
     "tqdm",
 ]
 
+[project.entry-points."bw2data.codec"]
+# Lets bw2data store temporal distributions as tagged JSON values
+bw_temporalis = "bw_temporalis.codec:register"
+
 [project.urls]
 source = "https://github.com/brightway-lca/bw_temporalis"
 homepage = "https://github.com/brightway-lca/bw_temporalis"
